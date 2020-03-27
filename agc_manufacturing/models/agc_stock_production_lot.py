@@ -47,7 +47,7 @@ class AgcProductionLot(models.Model):
             if res_model == 'mrp.production':
                 mrp_production = self.env[res_model].browse(res_id)
                 generated_reference = "[{}: {} + {}]".format(initial_move.product_id.name_get()[0][1],
-                                                             mrp_production.bom_id.name.name_get()[0][1],
+                                                             mrp_production.bom_id.name_get()[0][1],
                                                              mrp_production.routing_id.name_get()[0][1] if mrp_production.routing_id else '')
             else:
                 generated_reference = "[{}]".format(initial_move.product_id.name_get()[0][1])
