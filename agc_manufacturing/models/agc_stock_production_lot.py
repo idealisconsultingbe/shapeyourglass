@@ -28,8 +28,8 @@ class AgcProductionLot(models.Model):
         :return: Find the stock move line that is at the origin of the line given in parameters
         """
         initial_line = line
-        while(self.get_previous_move(initial_line)):
-            child_lines = self.get_previous_move(initial_line).sorted(lambda move_line: move_line.date)
+        while(self.get_previous_move_line(initial_line)):
+            child_lines = self.get_previous_move_line(initial_line).sorted(lambda move_line: move_line.date)
             initial_line = child_lines[0]
         return initial_line
 
@@ -42,7 +42,7 @@ class AgcProductionLot(models.Model):
         line = self.stock_move_line_ids.sorted(lambda move_line: move_line.date)
         if line:
             line = line[0]
-            initial_move = self.get_initial_move(line)
+            initial_move = self.get_initial_move_line(line)
             res_model, res_id, ref = self.env['stock.traceability.report']._get_reference(line)
             if res_model == 'mrp.production':
                 mrp_production = self.env[res_model].browse(res_id)
