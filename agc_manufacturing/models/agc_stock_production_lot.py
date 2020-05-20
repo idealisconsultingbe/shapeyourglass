@@ -10,6 +10,27 @@ class AgcProductionLot(models.Model):
     name = fields.Char(string='Lot/Serial Number', readonly=True)
     ref = fields.Char(string='Internal Reference', compute='_get_internal_reference', store=True)
     stock_move_line_ids = fields.One2many('stock.move.line', 'lot_id', string='Stock Move Lines')
+    currency_id = fields.Many2one('res.currency', related='company_id.currency_id', readonly=True)
+    unit_cost = fields.Monetary(currency_field='currency_id', string='Unit Cost')
+    value_cost = fields.Monetary(currency_field='currency_id', string='Value Cost', compute='_compute_value_cost',
+                                 store=True, readonly=True)
+
+    @api.depends('stock_move_line_ids.produce_line_ids', 'stock_move_line_ids.consume_line_ids')
+    def _get_internal_reference(self):
+        """
+        If the lot is linked to an mrp.production the internal reference of the lot contains the bom and routing details
+        """
+        for lot in self:
+            lot.ref = lot.get_lot_generated_ref()
+
+    @api.depends('product_qty', 'unit_cost')
+    def _compute_value_cost(self):
+        """
+        The value cost is computed here and stored in the database depending on the quantity and the unit cost of the
+        lot.
+        """
+        for lot in self:
+            lot.value_cost = lot.product_qty*lot.unit_cost
 
     def get_previous_move_line(self, line):
         """
@@ -53,11 +74,3 @@ class AgcProductionLot(models.Model):
             else:
                 generated_reference = "[{}]".format(initial_move.product_id.name_get()[0][1])
         return generated_reference
-
-    @api.depends('stock_move_line_ids.produce_line_ids', 'stock_move_line_ids.consume_line_ids')
-    def _get_internal_reference(self):
-        """
-        If the lot is linked to an mrp.production the internal reference of the lot contains the bom and routing details
-        """
-        for lot in self:
-            lot.ref = lot.get_lot_generated_ref()

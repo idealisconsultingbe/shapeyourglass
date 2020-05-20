@@ -13,9 +13,11 @@ Module offering all expectations from Expansion about Manufacturing
         'base',
         'mrp',
         'stock',
+        'account_accountant'
     ],
     'data': [
         'views/agc_mrp_routing_views.xml',
+        'views/agc_stock_production_lot_view.xml',
         'views/agc_stock_traceability_report.xml',
     ],
     'installable': True,
