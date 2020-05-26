@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sale_order_form_button_finished_product_view" model="ir.ui.view">
+        <field name="name">sale.order.form.button.finished.product</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='order_line']//tree//field[@name='name']" position="after">
+                    <field name="configuration_is_done" invisible="1"/>
+                    <button string="FP Configuration" type="action" name="%(agc_manufacturing.sale_order_line_product_manufacture_spec_action)d" class="btn-primary" style="background-color:red;"/>
+                </xpath>
+            </data>
+        </field>
+    </record>
+</odoo>

@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 
 class AGCRoutingEfficiency(models.Model):
     _name = 'mrp.routing.efficiency'
+    _description = "Record associating a routing's complexity to an efficiency in percent."
 
     name = fields.Char(string='Complexity Name', translate=True, required=True)
     efficiency = fields.Integer(string='Yield (%)', default=100)
