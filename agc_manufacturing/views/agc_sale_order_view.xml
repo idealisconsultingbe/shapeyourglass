@@ -8,7 +8,7 @@
             <data>
                 <xpath expr="//field[@name='order_line']//tree//field[@name='name']" position="after">
                     <field name="configuration_is_done" invisible="1"/>
-                    <button string="FP Configuration" type="action" name="%(agc_manufacturing.sale_order_line_product_manufacture_spec_action)d" class="btn-primary" style="background-color:red;"/>
+                    <button string="FP Configuration" type="object" name="open_fp_configuration_view" class="btn-primary"/>
                 </xpath>
             </data>
         </field>
