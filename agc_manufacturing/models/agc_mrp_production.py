@@ -116,5 +116,5 @@ class AGCProduction(models.Model):
                                                  consumed_moves.sudo()]) + work_center_cost + extra_cost) / qty_done
                 for line in finished_move.move_line_ids:
                     if line.lot_id:
-                        finished_move.price_unit = line.lot_id.unit_cost
+                        line.lot_id.unit_cost = finished_move.price_unit
         return res
