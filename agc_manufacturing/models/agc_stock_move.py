@@ -5,7 +5,7 @@ from odoo import models, fields
 
 
 class AGCStockMove(models.Model):
-    _inherit = "stock.move"
+    _inherit = 'stock.move'
 
     def _create_out_svl(self, forced_quantity=None):
         """

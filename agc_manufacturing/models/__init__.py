@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
 
+from . import agc_mrp_routing_efficiency
+from . import agc_product_manufacture_specification
+from . import agc_mrp_routing
+from . import agc_product_category
+from . import agc_purchase_order_line
+from . import agc_sale_order_line
 from . import agc_product
 from . import agc_mrp_routing
 from . import agc_mrp_production

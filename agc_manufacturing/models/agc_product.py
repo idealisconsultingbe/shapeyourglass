@@ -5,6 +5,6 @@ from odoo import models, fields
 
 
 class AGCProduct(models.Model):
-    _inherit = "product.product"
+    _inherit = 'product.product'
 
     routing_ids = fields.One2many('mrp.routing', 'product_id', string="Routings")

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
 class AGCProduction(models.Model):
-    _inherit = "mrp.production"
+    _inherit = 'mrp.production'
 
+    product_manufacture_spec_ids = fields.One2many('product.manufacture.specification', 'production_id', string='Finished Product Specifications')
     routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False,
                                  states={'draft': [('readonly', False)]},
                                  required=True, domain="""[
@@ -18,6 +20,15 @@ class AGCProduction(models.Model):
                                                     ('product_id','=',product_id),
                                                     ('product_id','=',False)]""", check_company=True)
 
+    @api.constrains('product_manufacture_spec_ids')
+    def product_manufacture_spec_one2one(self):
+        """
+        The link between an MO and its product manufacture spec should be a one2one.
+        Make sure that no more than one product manufacture spec is linked to an MO.
+        """
+        for production in self:
+            if production.product_manufacture_spec_ids and len(production.product_manufacture_spec_ids) > 1:
+                raise UserError(_('An MO should not have more than one Finished Product Specifications. See MO(%s)' % production.name))
 
     def _generate_workorders(self, exploded_boms):
         """ Overriden method
@@ -95,25 +106,13 @@ class AGCProduction(models.Model):
 
     def _cal_price(self, consumed_moves):
         """
-        The standard method has been overriden in order to compute the unit cost of a lot
+        The standard method has been override in order to compute the unit cost of a lot
         """
         res =  super(AGCProduction, self)._cal_price(consumed_moves)
-        work_center_cost = 0
-        finished_move = self.move_finished_ids.filtered(
-            lambda x: x.product_id == self.product_id and x.state not in ('done', 'cancel') and x.quantity_done > 0)
+        finished_move = self.move_finished_ids.filtered(lambda x: x.product_id == self.product_id and x.state not in ('done', 'cancel') and x.quantity_done > 0)
         if finished_move:
             finished_move.ensure_one()
-            for work_order in self.workorder_ids:
-                time_lines = work_order.time_ids.filtered(lambda x: x.date_end and not x.cost_already_recorded)
-                duration = sum(time_lines.mapped('duration'))
-                time_lines.write({'cost_already_recorded': True})
-                work_center_cost += (duration / 60.0) * work_order.workcenter_id.costs_hour
             if finished_move.product_id.cost_method in ('fifo', 'average'):
-                qty_done = finished_move.product_uom._compute_quantity(finished_move.quantity_done,
-                                                                       finished_move.product_id.uom_id)
-                extra_cost = self.extra_cost * qty_done
-                finished_move.price_unit = (sum([-m.stock_valuation_layer_ids.value for m in
-                                                 consumed_moves.sudo()]) + work_center_cost + extra_cost) / qty_done
                 for line in finished_move.move_line_ids:
                     if line.lot_id:
                         line.lot_id.unit_cost = finished_move.price_unit

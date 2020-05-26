@@ -12,10 +12,15 @@ Module offering all expectations from Expansion about Manufacturing
     'depends': [
         'base',
         'mrp',
+        'sale',
+        'product',
+        'purchase',
         'stock',
-        'account_accountant'
+        'stock_account',
+        'mrp_account',
     ],
     'data': [
+        'security/ir.model.access.csv',
         'views/agc_mrp_routing_views.xml',
         'views/agc_stock_production_lot_view.xml',
         'views/agc_stock_traceability_report.xml',
