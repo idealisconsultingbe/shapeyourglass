@@ -16,14 +16,17 @@ class AGCProductManufactureSpecification(models.Model):
     sequence = fields.Integer(string='Sequence', help="Used to order the 'Product specification' tree view")
     product_id = fields.Many2one('product.product', string='Product')
     bom_id = fields.Many2one('mrp.bom', string='Bill of Material')
-    bom_efficiency = fields.Integer(string="BoM's Yield (%)", default=100)
+    bom_efficiency = fields.Integer(string="BoM's Yield (%)", default=100, help='This parameter allows to adapt the efficiency of the BOM. Its value must be lower or equal to 100 and higher than zero.'
+                                                                                'A value lower than 100 will impact the evaluation of the cost of the manufacturing process.'
+                                                                                'It will also impact the quantity of raw material send to the manufacturing location.')
     routing_id = fields.Many2one('mrp.routing', string="Routing")
-    routing_efficiency_id = fields.Many2one('mrp.routing.efficiency', string="Routing's Complexity")
+    routing_efficiency_id = fields.Many2one('mrp.routing.efficiency', string="Routing's Complexity", help='This parameter allows to adapt the efficiency of the Routing, its value must be comprised between 0 and 100.'
+                                                                                                          'If the complexity as an efficiency lower than 100 it will impact the evaluation of the cost of the manufacturing process.'
+                                                                                                          'It will also impact the quantity of raw material send to the manufacturing location.')
     currency_id = fields.Many2one('res.currency', related='sale_line_id.currency_id')
     price_unit = fields.Monetary(string='Unit Cost', default=0.0)
-    origin_manufacture_spec_id = fields.Many2one('product.manufacture.specification', string="Origin Product Specification", help='Technical field that indicate which specification has triggered the creation of this record.')
     production_id = fields.Many2one('mrp.production', string='Manufacturing Order')
-    production_status = fields.Selection(related='production_id.state', string='MO Status')
+    production_status = fields.Selection(related='production_id.state', string='MO Status', help='Display the status of the Manufacturing Order')
     purchase_line_id = fields.Many2one('purchase.order.line', string='Purchase Order Line')
     purchase_id = fields.Many2one('purchase.order', related='purchase_line_id.order_id', string='Purchase Order')
 
@@ -34,4 +37,4 @@ class AGCProductManufactureSpecification(models.Model):
         """
         for product_specifiaction in self:
             if not 0 < product_specifiaction.bom_efficiency <= 100:
-                raise UserError(_("The BOM's yield must be greater than 0 or lower/equal to 100."))
+                raise UserError(_("The BOM's yield must be greater than 0 and lower or equal than 100."))

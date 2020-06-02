@@ -115,5 +115,5 @@ class AGCProduction(models.Model):
             if finished_move.product_id.cost_method in ('fifo', 'average'):
                 for line in finished_move.move_line_ids:
                     if line.lot_id:
-                        line.lot_id.unit_cost = finished_move.price_unit
+                        line.lot_id.unit_cost = finished_move.product_uom._compute_price(finished_move.price_unit, line.lot_id.product_uom_id)
         return res

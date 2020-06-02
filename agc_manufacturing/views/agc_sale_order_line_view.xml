@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="sale_order_line_form_product_manufacture_spec_view" model="ir.ui.view">
-        <field name="name">sale.order.line.form.product.manufacture.spec.view</field>
+    <record id="sale_order_line_view_form_product_manufacture_spec" model="ir.ui.view">
+        <field name="name">sale.order.line.form.product.manufacture.spec</field>
         <field name="model">sale.order.line</field>
         <field name="arch" type="xml">
             <form name="product_manuf_spec">
@@ -36,8 +36,8 @@
         </field>
     </record>
 
-    <record id="sale_order_line_confirmed_form_product_manufacture_spec_view" model="ir.ui.view">
-        <field name="name">sale.order.line.confirmed.form.product.manufacture.spec.view</field>
+    <record id="sale_order_line_confirmed_view_form_product_manufacture_spec" model="ir.ui.view">
+        <field name="name">sale.order.line.confirmed.form.product.manufacture.spec</field>
         <field name="model">sale.order.line</field>
         <field name="arch" type="xml">
             <form name="product_manuf_spec">

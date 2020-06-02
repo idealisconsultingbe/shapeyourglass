@@ -10,10 +10,9 @@ class AgcProductionLot(models.Model):
     name = fields.Char(string='Lot/Serial Number', readonly=True)
     ref = fields.Char(string='Internal Reference', compute='_get_internal_reference', store=True)
     stock_move_line_ids = fields.One2many('stock.move.line', 'lot_id', string='Stock Move Lines')
-    currency_id = fields.Many2one('res.currency', related='company_id.currency_id', readonly=True)
+    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
     unit_cost = fields.Monetary(currency_field='currency_id', string='Unit Cost', default=0.0)
-    value_cost = fields.Monetary(currency_field='currency_id', string='Value Cost', compute='_compute_value_cost',
-                                 store=True, readonly=True)
+    value_cost = fields.Monetary(currency_field='currency_id', string='Value Cost', compute='_compute_value_cost', store=True, readonly=True)
 
     @api.depends('stock_move_line_ids.produce_line_ids', 'stock_move_line_ids.consume_line_ids')
     def _get_internal_reference(self):

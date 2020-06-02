@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <record id="agc_mrp_routing_form_view" model="ir.ui.view">
+    <record id="agc_mrp_routing_view_form" model="ir.ui.view">
         <field name="name">agc.mrp.routing.form.view</field>
         <field name="model">mrp.routing</field>
         <field name="inherit_id" ref="mrp.mrp_routing_form_view"/>
@@ -9,6 +9,9 @@
             <xpath expr="//field[@name='name']" position="after">
                 <field name="product_id"/>
             </xpath>
+           <field name="company_id" position="before">
+               <field name="routing_efficiency_id" required="1"/>
+           </field>
         </field>
     </record>
 
