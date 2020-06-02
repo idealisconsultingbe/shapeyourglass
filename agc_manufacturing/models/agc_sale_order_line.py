@@ -9,7 +9,7 @@ class AGCSaleOrderLine(models.Model):
 
     product_manufacture_spec_ids = fields.One2many('product.manufacture.specification', 'sale_line_id', string='Finished Product Specifications')
     finished_product_unit_cost = fields.Monetary(string='Finished Product Unit Cost', default=0.0)
-    finished_product_quantity = fields.Integer(string='Mothersheet / DLS', default=0)
+    finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1)
     configuration_is_done = fields.Boolean(string='FP Configuration is done', default=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
 
     def open_fp_configuration_view(self):

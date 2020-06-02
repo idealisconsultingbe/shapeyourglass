@@ -23,7 +23,7 @@ class AGCProductManufactureSpecification(models.Model):
     routing_efficiency_id = fields.Many2one('mrp.routing.efficiency', string="Routing's Complexity", help='This parameter allows to adapt the efficiency of the Routing, its value must be comprised between 0 and 100.'
                                                                                                           'If the complexity as an efficiency lower than 100 it will impact the evaluation of the cost of the manufacturing process.'
                                                                                                           'It will also impact the quantity of raw material send to the manufacturing location.')
-    currency_id = fields.Many2one('res.currency', related='sale_line_id.currency_id')
+    currency_id = fields.Many2one('res.currency', related='sale_line_id.currency_id', string="Currency")
     price_unit = fields.Monetary(string='Unit Cost', default=0.0)
     production_id = fields.Many2one('mrp.production', string='Manufacturing Order')
     production_status = fields.Selection(related='production_id.state', string='MO Status', help='Display the status of the Manufacturing Order')
