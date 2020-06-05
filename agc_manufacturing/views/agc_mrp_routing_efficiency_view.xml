@@ -38,6 +38,6 @@
         <field name="view_mode">tree</field>
     </record>
 
-    <menuitem id="menu_mrp_routing_efficiency" name="Routing Efficiency" action="agc_manufacturing.mrp_routing_efficiency_action" parent="mrp.menu_mrp_bom" sequence="70"/>
+    <menuitem id="mrp_routing_efficiency_menu" name="Routing Efficiency" action="agc_manufacturing.mrp_routing_efficiency_action" parent="mrp.menu_mrp_bom" sequence="70"/>
 
 </odoo>

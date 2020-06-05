@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
-
 from odoo import api, fields, models, _
 
 
@@ -8,16 +7,16 @@ class AgcProductionLot(models.Model):
     _inherit = 'stock.production.lot'
 
     name = fields.Char(string='Lot/Serial Number', readonly=True)
-    ref = fields.Char(string='Internal Reference', compute='_get_internal_reference', store=True)
+    ref = fields.Char(string='Internal Reference', compute='_compute_ref', store=True)
     stock_move_line_ids = fields.One2many('stock.move.line', 'lot_id', string='Stock Move Lines')
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
     unit_cost = fields.Monetary(currency_field='currency_id', string='Unit Cost', default=0.0)
     value_cost = fields.Monetary(currency_field='currency_id', string='Value Cost', compute='_compute_value_cost', store=True, readonly=True)
 
     @api.depends('stock_move_line_ids.produce_line_ids', 'stock_move_line_ids.consume_line_ids')
-    def _get_internal_reference(self):
+    def _compute_ref(self):
         """
-        If the lot is linked to an mrp.production the internal reference of the lot contains the bom and routing details
+        If lot is linked to a mrp.production the internal reference of the lot contains BOM and routing details
         """
         for lot in self:
             lot.ref = lot.get_lot_generated_ref()
@@ -25,8 +24,7 @@ class AgcProductionLot(models.Model):
     @api.depends('product_qty', 'unit_cost')
     def _compute_value_cost(self):
         """
-        The value cost is computed here and stored in the database depending on the quantity and the unit cost of the
-        lot.
+        Cost value is computed here and stored in database depending on loy quantity and unit cost
         """
         for lot in self:
             lot.value_cost = lot.product_qty*lot.unit_cost

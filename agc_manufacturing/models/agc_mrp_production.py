@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
-
-from odoo import models, fields, api, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
@@ -21,17 +20,17 @@ class AGCProduction(models.Model):
                                                     ('product_id','=',False)]""", check_company=True)
 
     @api.constrains('product_manufacture_spec_ids')
-    def product_manufacture_spec_one2one(self):
+    def _check_product_manufacture_spec_one2one(self):
         """
         The link between an MO and its product manufacture spec should be a one2one.
         Make sure that no more than one product manufacture spec is linked to an MO.
         """
         for production in self:
             if production.product_manufacture_spec_ids and len(production.product_manufacture_spec_ids) > 1:
-                raise UserError(_('An MO should not have more than one Finished Product Specifications. See MO(%s)' % production.name))
+                raise UserError(_('MO should not have more than one Finished Product Specification. See MO({})').format(production.name))
 
     def _generate_workorders(self, exploded_boms):
-        """ Overriden method
+        """ Overridden method
 
         Standard method uses routing from BoM while we want to use routing from production.
         Changes were only made to conditions to reflect this new behaviour
@@ -52,7 +51,7 @@ class AGCProduction(models.Model):
         return workorders
 
     def _workorders_create(self, bom, bom_data):
-        """ Overriden method
+        """ Overridden method
 
         Standard method uses routing from BoM while we want to use routing from production.
         Changes were made to workorder creation, and raw moves to reflect this new behaviour
@@ -106,7 +105,7 @@ class AGCProduction(models.Model):
 
     def _cal_price(self, consumed_moves):
         """
-        The standard method has been override in order to compute the unit cost of a lot
+        Override standard method in order to compute lot unit cost
         """
         res =  super(AGCProduction, self)._cal_price(consumed_moves)
         finished_move = self.move_finished_ids.filtered(lambda x: x.product_id == self.product_id and x.state not in ('done', 'cancel') and x.quantity_done > 0)

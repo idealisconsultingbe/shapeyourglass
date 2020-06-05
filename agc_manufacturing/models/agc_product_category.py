@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
-
-from odoo import models, fields
+from odoo import fields, models
 
 
 class AGCProductCategory(models.Model):
@@ -10,4 +9,4 @@ class AGCProductCategory(models.Model):
     PRODUCT_TYPES = [('finished_product', 'Finished Product'),
                      ('semi_finished_product', 'Semi-Finished Product'),
                      ('other', 'Other')]
-    product_type = fields.Selection(PRODUCT_TYPES, string='Product Type', default='other')
+    product_type = fields.Selection(PRODUCT_TYPES, string='Product Type', required=True, default='other')

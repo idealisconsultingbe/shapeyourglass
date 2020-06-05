@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
-
 {
     'name': 'AGC Manufacturing',
     'summary': 'Module offering all expectations from AGC about Manufacturing',
-    'version': '0.1',
+    'version': '13.0.0.1',
     'description': """
-Module offering all expectations from Expansion about Manufacturing
+            Module offering all expectations from AGC about Manufacturing
         """,
-    'author': 'dwa@idealisconsulting.com - Idealis Consulting',
+    'author': 'pfi@idealisconsulting.com, dwa@idealisconsulting.com - Idealis Consulting',
     'depends': [
         'base',
         'mrp',

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="sale_order_line_view_form_product_manufacture_spec" model="ir.ui.view">
-        <field name="name">sale.order.line.form.product.manufacture.spec</field>
+
+    <record id="sale_order_line_view_form" model="ir.ui.view">
+        <field name="name">sale.order.line.view.form</field>
         <field name="model">sale.order.line</field>
         <field name="arch" type="xml">
             <form name="product_manuf_spec">
@@ -10,34 +11,37 @@
                     <group name="main">
                         <group name="sub_main_data">
                             <field name="finished_product_quantity"/>
+                            <field name="company_id" invisible="1"/>
                         </group>
                         <group name="cost">
-                            <field name="finished_product_unit_cost" attrs="{'invisible': [('configuration_is_done', '!=', True)]}" string="Unit Cost"/>
+                            <field name="finished_product_unit_cost" readonly="1" attrs="{'invisible': [('configuration_is_done', '!=', True)]}" string="Unit Cost"/>
                         </group>
                     </group>
-                    <field name="product_manufacture_spec_ids">
-                        <tree create="false" editable="bottom">
+                    <field name="product_manufacture_spec_ids" options="{'no_create': True}">
+                        <tree editable="bottom" create="false" delete="false">
+                            <field name="state" invisible="1"/>
                             <field name="sale_order_state" invisible="1"/>
                             <field name="configuration_is_done" invisible="1"/>
                             <field name="product_id" readonly="1"/>
-                            <field name="bom_id" string="BoM"/>
-                            <field name="bom_efficiency" string="Yield (%)"/>
-                            <field name="routing_id"/>
-                            <field name="routing_efficiency_id" string="Complexity"/>
+                            <field name="bom_id" string="BoM" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
+                            <field name="bom_efficiency" string="Yield (%)" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
+                            <field name="routing_id" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
+                            <field name="routing_efficiency_id" string="Complexity" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
                             <field name="price_unit" readonly="1"/>
+                            <button string="Update" name="update_product_specification_action" type="object" class="btn-primary" states="to_update"/>
+                            <button string="Delete" name="delete_product_specification_action" type="object" class="btn-secondary" states="to_update,updated"/>
                         </tree>
                     </field>
                 </sheet>
                 <footer>
-                    <!--                    TODO add action on this button-->
-                    <button string="Compute Cost" class='btn-primary' attrs="{'invisible': [('configuration_is_done', '!=', True)]}"/>
+                    <button string="Compute Cost" name="calculate_product_cost_action" type="object" class='btn-primary' attrs="{'invisible': [('configuration_is_done', '!=', True)]}"/>
                 </footer>
             </form>
         </field>
     </record>
 
-    <record id="sale_order_line_confirmed_view_form_product_manufacture_spec" model="ir.ui.view">
-        <field name="name">sale.order.line.confirmed.form.product.manufacture.spec</field>
+    <record id="sale_order_line_confirmed_view_form" model="ir.ui.view">
+        <field name="name">sale.order.line.confirmed.view</field>
         <field name="model">sale.order.line</field>
         <field name="arch" type="xml">
             <form name="product_manuf_spec">
@@ -52,11 +56,11 @@
                         </group>
                     </group>
                     <field name="product_manufacture_spec_ids">
-                        <tree create="false" editable="bottom">
+                        <tree editable="bottom">
                             <field name="sale_order_state" invisible="1"/>
                             <field name="configuration_is_done" invisible="1"/>
                             <field name="product_id" readonly="1"/>
-                            <field name="bom_id" string="BoM" readonly="1"/>
+                            <field name="bom_id" string="BoM"/>
                             <field name="bom_efficiency" string="Yield (%)" readonly="1"/>
                             <field name="routing_id" readonly="1"/>
                             <field name="routing_efficiency_id" string="Complexity" readonly="1"/>
@@ -74,4 +78,5 @@
             </form>
         </field>
     </record>
+
 </odoo>
