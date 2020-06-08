@@ -1,10 +1,43 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
-from odoo import fields, models
+from odoo import fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class AGCStockMove(models.Model):
     _inherit = 'stock.move'
+
+    def _get_sale_order_line(self, moves):
+        for move in moves:
+            if move.sale_line_id:
+                return move.sale_line_id
+            elif move.raw_material_production_id:
+                if len(move.raw_material_production_id.move_dest_ids or []) == 1:
+                    return self._get_sale_order_line(move.raw_material_production_id.move_dest_ids)
+                elif len(move.raw_material_production_id.move_finished_ids or []) == 1:
+                    return self._get_sale_order_line(move.raw_material_production_id.move_finished_ids)
+                else:
+                    return False
+            elif len(move.move_dest_ids or []) == 1:
+                return self._get_sale_order_line(move.move_dest_ids)
+            else:
+                return False
+
+    def _get_subcontract_bom(self):
+        """ Overridden Method """
+        res = super(AGCStockMove, self)._get_subcontract_bom()
+        if self.env.context.get('pf_configure', False):
+            so_line = self._get_sale_order_line(self.move_dest_ids)
+            if so_line:
+                for spec_line in so_line.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence):
+                    if not spec_line.production_id:
+                        if spec_line.product_id != self.product_id:
+                            raise ValidationError(
+                                _('Product ({}) is not the one expected ({} expected)').format(spec_line.product_id,
+                                                                                               self.product_id))
+                        else:
+                            return spec_line.bom_id
+        return res
 
     def _create_out_svl(self, forced_quantity=None):
         """

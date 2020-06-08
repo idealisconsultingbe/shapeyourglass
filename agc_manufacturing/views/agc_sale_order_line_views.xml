@@ -23,10 +23,10 @@
                             <field name="sale_order_state" invisible="1"/>
                             <field name="configuration_is_done" invisible="1"/>
                             <field name="product_id" readonly="1"/>
-                            <field name="bom_id" string="BoM" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
-                            <field name="bom_efficiency" string="Yield (%)" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
-                            <field name="routing_id" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
-                            <field name="routing_efficiency_id" string="Complexity" required="1" attrs="{'readonly': [('state', '=', 'updated')]}"/>
+                            <field name="bom_id" string="BoM" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
+                            <field name="bom_efficiency" string="Yield (%)" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
+                            <field name="routing_id" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
+                            <field name="routing_efficiency_id" string="Complexity" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
                             <field name="price_unit" readonly="1"/>
                             <button string="Update" name="update_product_specification_action" type="object" class="btn-primary" states="to_update"/>
                             <button string="Delete" name="delete_product_specification_action" type="object" class="btn-secondary" states="to_update,updated"/>

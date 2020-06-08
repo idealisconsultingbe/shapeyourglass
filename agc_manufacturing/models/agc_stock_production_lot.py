@@ -24,7 +24,7 @@ class AgcProductionLot(models.Model):
     @api.depends('product_qty', 'unit_cost')
     def _compute_value_cost(self):
         """
-        Cost value is computed here and stored in database depending on loy quantity and unit cost
+        Cost value is computed here and stored in database depending on lot quantity and unit cost
         """
         for lot in self:
             lot.value_cost = lot.product_qty*lot.unit_cost
