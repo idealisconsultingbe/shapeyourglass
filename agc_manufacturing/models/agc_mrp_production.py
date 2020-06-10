@@ -10,14 +10,14 @@ class AGCProduction(models.Model):
     product_manufacture_spec_ids = fields.One2many('product.manufacture.specification', 'production_id', string='Finished Product Specifications')
     routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False,
                                  states={'draft': [('readonly', False)]},
-                                 required=True, domain="""[
-                                         '&',
-                                            '|',
-                                                ('company_id', '=', False),
-                                                ('company_id', '=', company_id),
-                                                '|',
-                                                    ('product_id','=',product_id),
-                                                    ('product_id','=',False)]""", check_company=True)
+                                 domain="""[
+                                 '&',
+                                    '|',
+                                        ('company_id', '=', False),
+                                        ('company_id', '=', company_id),
+                                        '|',
+                                            ('product_id','=',product_id),
+                                            ('product_id','=',False)]""", check_company=True)
 
     @api.constrains('product_manufacture_spec_ids')
     def _check_product_manufacture_spec_one2one(self):
@@ -40,7 +40,7 @@ class AGCProduction(models.Model):
         for bom, bom_data in exploded_boms:
             # Changes from standard
             if self.routing_id.id and (not bom_data['parent_line'] or bom_data[
-                                        'parent_line'].bom_id.routing_id.id != self.routing_id.id):
+                'parent_line'].bom_id.routing_id.id != self.routing_id.id):
                 # end of changes
                 temp_workorders = self._workorders_create(bom, bom_data)
                 workorders += temp_workorders

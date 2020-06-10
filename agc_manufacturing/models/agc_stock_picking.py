@@ -31,9 +31,9 @@ class AGCStockPicking(models.Model):
             if so_line:
                 for spec_line in so_line.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence):
                     if not spec_line.production_id:
-                        if spec_line.product_id != subcontract_move.product_id:
+                        if spec_line.bom_id.type == 'subcontract' and spec_line.product_id != subcontract_move.product_id:
                             raise ValidationError(
-                                _('Product ({}) is not the one expected ({} expected)').format(spec_line.product_id, subcontract_move.product_id))
+                                _('Product ({}) is not the one expected ({} expected or the BOM {} is not of type subcontract.)').format(spec_line.product_id.name_get(), self.product_id.name_get(), spec_line.bom_id.name))
                         else:
                             res['product_manufacture_spec_ids'] = [(4, spec_line.id, 0)]
                             break

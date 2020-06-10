@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
+
 from odoo import api, models, _
 from odoo.exceptions import ValidationError
 
@@ -43,7 +44,7 @@ class AGCStockRule(models.Model):
                 for spec_line in so_line.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence):
                     if not spec_line.production_id:
                         if spec_line.product_id != product_id:
-                            raise ValidationError(_('Product ({}) is not the one expected ({} expected)').format(spec_line.product_id, product_id))
+                            raise ValidationError(_('Product ({}) is not the one expected ({} expected)').format(spec_line.product_id.name_get(), product_id.name_get()))
                         else:
                             res.update({
                                 'bom_id': spec_line.bom_id.id,

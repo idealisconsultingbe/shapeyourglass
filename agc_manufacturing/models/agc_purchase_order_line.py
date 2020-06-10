@@ -17,4 +17,4 @@ class AGCPurchaseOrderLine(models.Model):
         """
         for purchase_line in self:
             if purchase_line.product_manufacture_spec_ids and len(purchase_line.product_manufacture_spec_ids) > 1:
-                raise UserError(_('MO should not have more than one Finished Product Specification. See MO({})').format(purchase_line.name))
+                raise UserError(_('PO line should not have more than one Finished Product Specification. See PO line({})').format(purchase_line.name_get()))

@@ -15,6 +15,7 @@ class AGCProductManufactureSpecification(models.Model):
     sequence = fields.Integer(string='Sequence', help="Used to order the 'Product specification' tree view")
     product_id = fields.Many2one('product.product', string='Product', required=True)
     bom_id = fields.Many2one('mrp.bom', string='Bill of Material', domain="[('product_id', '=', product_id), ('active', '=', True)]")
+    bom_type = fields.Selection(related='bom_id.type', string='BoM Type')
     bom_efficiency = fields.Integer(string='BoM  Yield (%)', help='This parameter allows to adapt BOM efficiency. Its value must be lower or equal to 100 and higher than zero.'
                                                                                 'A value lower than 100 will impact cot evaluation of the manufacturing process.'
                                                                                 'It will also impact the quantity of raw material send to the manufacturing location.')
@@ -51,11 +52,11 @@ class AGCProductManufactureSpecification(models.Model):
 
     def update_product_specification_action(self):
         self.ensure_one()
-        if self.bom_id and self.routing_id:
+        if self.bom_id and (self.routing_id or self.bom_type != 'normal'):
             bom_semi_finished_products = self.bom_id.bom_line_ids.filtered(
                 lambda line: line.product_id.categ_id.product_type == 'semi_finished_product')
             if len(bom_semi_finished_products) > 1:
-                error_msg = _('{} BoM has more than one semi-finished product in its components list').format(self.bom_id)
+                error_msg = _('{} BoM has more than one semi-finished product in its components list').format(self.bom_id.name_get())
                 raise ValidationError(error_msg)
             elif bom_semi_finished_products:
                 self.state = 'locked'

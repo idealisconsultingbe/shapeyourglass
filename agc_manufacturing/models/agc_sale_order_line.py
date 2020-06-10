@@ -64,7 +64,7 @@ class AGCSaleOrderLine(models.Model):
     def calculate_product_cost_action(self):
         self.ensure_one()
         if not self.configuration_is_done:
-            return {'warning': _('Product ({}) configuration is not done yet.').format(self.product_id)}
+            return {'warning': _('Product ({}) configuration is not done yet.').format(self.product_id.name)}
         else:
             sorted_specs = self.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence, reverse=True)
             if not sorted_specs:
