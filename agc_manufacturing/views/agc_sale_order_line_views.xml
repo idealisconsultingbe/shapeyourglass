@@ -5,7 +5,7 @@
         <field name="name">sale.order.line.view.form</field>
         <field name="model">sale.order.line</field>
         <field name="arch" type="xml">
-            <form name="product_manuf_spec">
+            <form name="product_manuf_step">
                 <sheet>
                     <field name="configuration_is_done" invisible="1"/>
                     <group name="main">
@@ -17,7 +17,7 @@
                             <field name="finished_product_unit_cost" readonly="1" attrs="{'invisible': [('configuration_is_done', '!=', True)]}" string="Unit Cost"/>
                         </group>
                     </group>
-                    <field name="product_manufacture_spec_ids" options="{'no_create': True}">
+                    <field name="product_manufacture_step_ids" options="{'no_create': True}">
                         <tree editable="bottom" create="false" delete="false">
                             <field name="state" invisible="1"/>
                             <field name="sale_order_state" invisible="1"/>
@@ -29,8 +29,8 @@
                             <field name="routing_id" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
                             <field name="routing_efficiency_id" string="Complexity" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
                             <field name="price_unit" readonly="1"/>
-                            <button string="Update" name="update_product_specification_action" type="object" class="btn-primary" states="to_update"/>
-                            <button string="Delete" name="delete_product_specification_action" type="object" class="btn-secondary" states="to_update,updated"/>
+                            <button string="Update" name="update_product_manufacturing_step_action" type="object" class="btn-primary" states="to_update"/>
+                            <button string="Delete" name="delete_product_manufacturing_step_action" type="object" class="btn-secondary" states="to_update,updated"/>
                         </tree>
                     </field>
                 </sheet>
@@ -45,7 +45,7 @@
         <field name="name">sale.order.line.confirmed.view</field>
         <field name="model">sale.order.line</field>
         <field name="arch" type="xml">
-            <form name="product_manuf_spec">
+            <form name="product_manuf_step">
                 <sheet>
                     <field name="configuration_is_done" invisible="1"/>
                     <group name="main">
@@ -56,7 +56,7 @@
                             <field name="finished_product_unit_cost" string="Unit Cost" readonly="1"/>
                         </group>
                     </group>
-                    <field name="product_manufacture_spec_ids">
+                    <field name="product_manufacture_step_ids">
                         <tree editable="bottom">
                             <field name="sale_order_state" invisible="1"/>
                             <field name="configuration_is_done" invisible="1"/>

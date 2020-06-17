@@ -12,7 +12,7 @@ from odoo.exceptions import ValidationError, UserError
 class AGCStockRule(models.Model):
     _inherit = 'stock.rule'
 
-    def _get_purchase_order_line_spec_vals(self, product_id, values):
+    def _get_purchase_order_line_step_vals(self, product_id, values):
         """
         Linked the purchase order line to its manufacturing step.
         """
@@ -21,9 +21,9 @@ class AGCStockRule(models.Model):
             move_dest = values.get('move_dest_ids', False)
             so_line = move_dest._get_sale_order_line() if move_dest else False
             if so_line:
-                spec_line = so_line.find_next_unlinked_product_spec(product_id)
-                if spec_line:
-                    vals['product_manufacture_spec_ids'] = [(4, spec_line.id, 0)]
+                step_line = so_line.find_next_unlinked_manufacturing_step(product_id)
+                if step_line:
+                    vals['product_manufacture_step_ids'] = [(4, step_line.id, 0)]
         return vals
 
     def _prepare_mo_vals(self, product_id, product_qty, product_uom, location_id, name, origin, company_id, values, bom):
@@ -37,12 +37,12 @@ class AGCStockRule(models.Model):
             move_dest = values.get('move_dest_ids', False)
             so_line = move_dest._get_sale_order_line() if move_dest else False
             if so_line:
-                spec_line = so_line.find_next_unlinked_product_spec(product_id)
-                if spec_line:
+                step_line = so_line.find_next_unlinked_manufacturing_step(product_id)
+                if step_line:
                     res.update({
-                        'bom_id': spec_line.bom_id.id,
-                        'routing_id': spec_line.routing_id.id,
-                        'product_manufacture_spec_ids': [(4, spec_line.id, 0)]
+                        'bom_id': step_line.bom_id.id,
+                        'routing_id': step_line.routing_id.id,
+                        'product_manufacture_step_ids': [(4, step_line.id, 0)]
                     })
         return res
 
@@ -50,7 +50,8 @@ class AGCStockRule(models.Model):
     def _run_buy(self, procurements):
         """
         Overwrite standard method.
-        At the end of the runbuy process automatically confirm the PO if we are in the pf_configure process.
+        At the end of the run_buy process automatically confirm the PO if we are in the pf_configure process and if it has at least one line linked
+        to a product manufacturing step.
         """
         procurements_by_po_domain = defaultdict(list)
         for procurement, rule in procurements:
@@ -143,7 +144,8 @@ class AGCStockRule(models.Model):
             self.env['purchase.order.line'].sudo().create(po_line_values)
         # Custom changes happens here
         if self.env.context.get('pf_configure', False):
-            po.button_confirm()
+            if po.order_line.filtered(lambda line: line.product_manufacture_step_ids):
+                po.button_confirm()
         # end
 
     @api.model
@@ -153,5 +155,5 @@ class AGCStockRule(models.Model):
         Link the PO line to its manufacturing step and use the BoM and routing specified in it.
         """
         res = super(AGCStockRule, self)._prepare_purchase_order_line(product_id, product_qty, product_uom, company_id, values, po)
-        res.update(self._get_purchase_order_line_spec_vals(product_id, values))
+        res.update(self._get_purchase_order_line_step_vals(product_id, values))
         return res

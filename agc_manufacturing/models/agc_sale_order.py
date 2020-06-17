@@ -26,11 +26,13 @@ class AGCSaleOrder(models.Model):
     def action_cancel(self):
         """
         Overridden Method
-        If we cancel a Sale Order with finished product in its lines, then we also cancel every MO created for the manufacturing of this product.
+        If we cancel a Sale Order with finished product in its lines, then we also cancel every MO and PO created for the manufacturing of this product.
         """
         if self.state == 'sale':
             for fp_sale_line in self.order_line.filtered(lambda line: line.product_id.categ_id.product_type == 'finished_product'):
-                for spec_line in fp_sale_line.product_manufacture_spec_ids:
-                    if spec_line.production_id and spec_line.production_status in ('draft', 'confirmed'):
-                        spec_line.production_id.action_cancel()
+                for step_line in fp_sale_line.product_manufacture_step_ids:
+                    if step_line.production_id and step_line.production_status in ('draft', 'confirmed'):
+                        step_line.production_id.action_cancel()
+                    if step_line.purchase_id and step_line.purchase_id.state in ('draft', 'sent', 'to_approve', 'purchase'):
+                        step_line.purchase_id.button_cancel()
         return super(AGCSaleOrder, self).action_cancel()

@@ -5,15 +5,15 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
 
-class AGCProductManufactureSpecification(models.Model):
-    _name = 'product.manufacture.specification'
+class AGCProductManufacturingStep(models.Model):
+    _name = 'product.manufacturing.step'
     _description = 'Each record describes a step of the manufacturing chain aiming to produced a finished product.'
     _order = 'sequence'
 
     sale_line_id = fields.Many2one('sale.order.line', string='Sale Order Line', required=True, ondelete='cascade')
     configuration_is_done = fields.Boolean(related='sale_line_id.configuration_is_done', string='Finished Product Configuration is Done', help='Technical field that helps to know whether the Finished Product configuration is done.')
     sale_order_state = fields.Selection(related='sale_line_id.order_id.state', string='Sale Order Status')
-    sequence = fields.Integer(string='Sequence', help="Used to order the 'Product specification' tree view")
+    sequence = fields.Integer(string='Sequence', help="Used to order the 'Product Manufacturing Step' tree view")
     product_id = fields.Many2one('product.product', string='Product', required=True)
     bom_id = fields.Many2one('mrp.bom', string='Bill of Material', domain="[('product_id', '=', product_id), ('active', '=', True)]")
     bom_type = fields.Selection(related='bom_id.type', string='BoM Type')
@@ -37,8 +37,8 @@ class AGCProductManufactureSpecification(models.Model):
         """
         Make sure that efficiency is in the range ]0; 100]
         """
-        for product_specification in self:
-            if not 0 < product_specification.bom_efficiency <= 100:
+        for manufacturing_step in self:
+            if not 0 < manufacturing_step.bom_efficiency <= 100:
                 raise UserError(_('The BOM yield must be greater than 0 and lower or equal than 100.'))
 
     @api.onchange('routing_id')
@@ -57,10 +57,10 @@ class AGCProductManufactureSpecification(models.Model):
         if self.bom_id:
             self.bom_efficiency = self.bom_id.efficiency or self.bom_efficiency
 
-    def update_product_specification_action(self):
+    def update_product_manufacturing_step_action(self):
         """
         If self met the conditions than we either:
-            - Create a new product.manufacture.specification record for configuring the next step in the manufacturing chain.
+            - Create a new product.manufacturing.step record for configuring the next step in the manufacturing chain.
             - Stop the process because we have reach the last. The whole manufacturing chain is configured
         """
         self.ensure_one()
@@ -78,23 +78,24 @@ class AGCProductManufactureSpecification(models.Model):
                     'sequence': self.sequence + 1,
                     'sale_line_id': self.sale_line_id.id,
                 }
-                self.sale_line_id.update({'product_manufacture_spec_ids': [(0, 0, vals)]})
+                self.sale_line_id.update({'product_manufacture_step_ids': [(0, 0, vals)]})
             # We have reach the last step.
             else:
                 self.state = 'updated'
                 self.sale_line_id.configuration_is_done = True
         return self.sale_line_id.open_fp_configuration_view()
 
-    def delete_product_specification_action(self):
+    def delete_product_manufacturing_step_action(self):
         """
         Delete a manufacturing step en then unlock the previous step.
         """
+        self.ensure_one()
         sale_line = self.sale_line_id
         # after this, we lose references to self
-        sale_line.update({'product_manufacture_spec_ids': [(2, self.id, 0)]})
-        # retrieve last product specification and set its state to updatable (Unlock it)
-        if sale_line._get_last_product_spec():
-            sale_line._get_last_product_spec().state = 'to_update'
+        sale_line.update({'product_manufacture_step_ids': [(2, self.id, 0)]})
+        # retrieve last manufacturing step and set its state to updatable (Unlock it)
+        if sale_line._get_last_manufacturing_step():
+            sale_line._get_last_manufacturing_step().state = 'to_update'
         # reset configuration done flag
         sale_line.configuration_is_done = False
         # reset calculated prices

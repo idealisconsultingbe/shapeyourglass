@@ -1,5 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mrp_routing_efficiency_user,agc.mrp.routing.efficiency.user,agc_manufacturing.model_mrp_routing_efficiency,,1,0,0,0
 access_mrp_routing_efficiency_manager,agc.mrp.routing.efficiency.manager,agc_manufacturing.model_mrp_routing_efficiency,mrp.group_mrp_manager,1,1,1,1
-access_product_manufacture_specification_user,agc.product.manufacture.specification.user,agc_manufacturing.model_product_manufacture_specification,,1,0,0,0
-access_product_manufacture_specification_manager,agc.product.manufacture.specification.manager,agc_manufacturing.model_product_manufacture_specification,sales_team.group_sale_salesman,1,1,1,1
+access_product_manufacturing_step_user,agc.product.manufacturing.step.user,agc_manufacturing.model_product_manufacturing_step,,1,0,0,0
+access_product_manufacturing_step_manager,agc.product.manufacturing.step.manager,agc_manufacturing.model_product_manufacturing_step,sales_team.group_sale_salesman,1,1,1,1

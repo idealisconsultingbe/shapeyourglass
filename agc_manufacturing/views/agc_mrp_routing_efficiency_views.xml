@@ -16,7 +16,7 @@
         <field name="name">mrp.routing.efficiency.form</field>
         <field name="model">mrp.routing.efficiency</field>
         <field name="arch" type="xml">
-            <form name="product_manuf_spec">
+            <form name="product_manuf_step">
                 <sheet>
                     <group name="main">
                         <group name="sub_main_data">

@@ -40,10 +40,10 @@ class AGCStockMove(models.Model):
         if self.env.context.get('pf_configure', False):
             so_line = self.move_dest_ids._get_sale_order_line() if self.move_dest_ids else False
             if so_line:
-                # If an so line has been found return the BoM of the first spec_line which is not already linked to an MO
-                spec_line = so_line.find_next_unlinked_product_spec(self.product_id, subcontracted=True)
-                if spec_line:
-                    return spec_line.bom_id
+                # If an so line has been found return the BoM of the first step_line which is not already linked to an MO
+                step_line = so_line.find_next_unlinked_manufacturing_step(self.product_id, subcontracted=True)
+                if step_line:
+                    return step_line.bom_id
         return res
 
     def _create_out_svl(self, forced_quantity=None):

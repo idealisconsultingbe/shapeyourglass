@@ -7,7 +7,7 @@ from odoo.exceptions import UserError
 class AGCProduction(models.Model):
     _inherit = 'mrp.production'
 
-    product_manufacture_spec_ids = fields.One2many('product.manufacture.specification', 'production_id', string='Finished Product Specifications')
+    product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'production_id', string='Finished Product Manufacturing Step')
     subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')
     routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False,
                                  states={'draft': [('readonly', False)]},
@@ -20,15 +20,15 @@ class AGCProduction(models.Model):
                                             ('product_id','=',product_id),
                                             ('product_id','=',False)]""", check_company=True)
 
-    @api.constrains('product_manufacture_spec_ids')
-    def _check_product_manufacture_spec_one2one(self):
+    @api.constrains('product_manufacture_step_ids')
+    def _check_product_manufacture_step_one2one(self):
         """
-        The link between an MO and its product manufacture spec should be a one2one.
-        Make sure that no more than one product manufacture spec is linked to an MO.
+        The link between an MO and its product manufacturing step should be a one2one.
+        Make sure that no more than one product manufacturing step is linked to an MO.
         """
         for production in self:
-            if len(production.product_manufacture_spec_ids or []) > 1:
-                raise UserError(_('MO should not have more than one Finished Product Specification. See MO({})').format(production.name))
+            if len(production.product_manufacture_step_ids or []) > 1:
+                raise UserError(_('MO should not have more than one Finished Product Manufacturing Step. See MO({})').format(production.name))
 
     def _generate_workorders(self, exploded_boms):
         """ Overridden method
