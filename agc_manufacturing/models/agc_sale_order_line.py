@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
+
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class AGCSaleOrderLine(models.Model):
@@ -14,6 +16,10 @@ class AGCSaleOrderLine(models.Model):
 
     @api.depends('product_id.categ_id.product_type')
     def _compute_button_configure_visible(self):
+        """
+        Check whether the product selected is a finished product.
+        If it is it should be configured.
+        """
         for line in self:
             if line.product_id.categ_id.product_type == 'finished_product':
                 line.button_configure_visible = True
@@ -53,7 +59,26 @@ class AGCSaleOrderLine(models.Model):
             'target': 'new',
         }
 
+    def find_next_unlinked_product_spec(self, product_id, subcontracted=False):
+        """
+        Return the next product specification not linked to an MO.
+        If the product given does not match the next product specification return an Error.
+        """
+        self.ensure_one()
+        for spec_line in self.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence):
+            if not spec_line.production_id:
+                if spec_line.product_id != product_id:
+                    raise ValidationError(_('Product ({}) is not the one expected ({} expected)').format(spec_line.product_id.name_get(), product_id.name_get()))
+                elif subcontracted and spec_line.bom_id.type != 'subcontract':
+                    raise ValidationError(_('the BOM {} is not of type subcontract').format(spec_line.bom_id.name))
+                else:
+                    return spec_line
+        return False
+
     def _get_last_product_spec(self):
+        """
+        :return: The last manufacturing step, the one with the higher sequence.
+        """
         sorted_specs = self.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence, reverse=True)
         return sorted_specs[0] if sorted_specs else False
 
@@ -62,9 +87,13 @@ class AGCSaleOrderLine(models.Model):
         self.product_manufacture_spec_ids.write({'price_unit': 0.0})
 
     def calculate_product_cost_action(self):
+        """
+        At each manufacturing step calculate the unit cost of the manufactured product.
+        This cost depends on the components consumed during the manufacturing process + the hourly rate * the expected time set on the workcenters used.
+        """
         self.ensure_one()
         if not self.configuration_is_done:
-            return {'warning': _('Product ({}) configuration is not done yet.').format(self.product_id.name)}
+            return {'warning': _('Product ({}) configuration is not done yet.').format(self.product_id.name_get())}
         else:
             sorted_specs = self.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence, reverse=True)
             if not sorted_specs:

@@ -8,6 +8,7 @@ class AGCProduction(models.Model):
     _inherit = 'mrp.production'
 
     product_manufacture_spec_ids = fields.One2many('product.manufacture.specification', 'production_id', string='Finished Product Specifications')
+    subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')
     routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False,
                                  states={'draft': [('readonly', False)]},
                                  domain="""[
@@ -26,21 +27,19 @@ class AGCProduction(models.Model):
         Make sure that no more than one product manufacture spec is linked to an MO.
         """
         for production in self:
-            if production.product_manufacture_spec_ids and len(production.product_manufacture_spec_ids) > 1:
+            if len(production.product_manufacture_spec_ids or []) > 1:
                 raise UserError(_('MO should not have more than one Finished Product Specification. See MO({})').format(production.name))
 
     def _generate_workorders(self, exploded_boms):
         """ Overridden method
 
-        Standard method uses routing from BoM while we want to use routing from production.
-        Changes were only made to conditions to reflect this new behaviour
+        Standard method uses routing from BoM while we want to use routing from manufacturing order.
         """
         workorders = self.env['mrp.workorder']
         original_one = False
         for bom, bom_data in exploded_boms:
             # Changes from standard
-            if self.routing_id.id and (not bom_data['parent_line'] or bom_data[
-                'parent_line'].bom_id.routing_id.id != self.routing_id.id):
+            if self.routing_id.id and (not bom_data['parent_line'] or bom_data['parent_line'].bom_id.routing_id.id != self.routing_id.id):
                 # end of changes
                 temp_workorders = self._workorders_create(bom, bom_data)
                 workorders += temp_workorders
@@ -53,8 +52,8 @@ class AGCProduction(models.Model):
     def _workorders_create(self, bom, bom_data):
         """ Overridden method
 
-        Standard method uses routing from BoM while we want to use routing from production.
-        Changes were made to workorder creation, and raw moves to reflect this new behaviour
+        Standard method uses routing from BoM while we want to use routing from manufacturing order.
+        Changes were made on workorder creation, and on raw moves to reflect this new behaviour
         """
         workorders = self.env['mrp.workorder']
 

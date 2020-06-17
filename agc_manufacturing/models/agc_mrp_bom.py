@@ -17,7 +17,7 @@ class AGCBom(models.Model):
     @api.constrains('efficiency')
     def _check_efficiency_domain(self):
         """
-        Make sure that efficiency is in ]0; 100] range
+        Make sure that efficiency is in the range ]0; 100].
         """
         for bom in self:
             if not 0 < bom.efficiency <= 100:

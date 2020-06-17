@@ -16,5 +16,5 @@ class AGCPurchaseOrderLine(models.Model):
         Make sure that no more than one product manufacture spec is linked to a MO.
         """
         for purchase_line in self:
-            if purchase_line.product_manufacture_spec_ids and len(purchase_line.product_manufacture_spec_ids) > 1:
+            if len(purchase_line.product_manufacture_spec_ids or []) > 1:
                 raise UserError(_('PO line should not have more than one Finished Product Specification. See PO line({})').format(purchase_line.name_get()))

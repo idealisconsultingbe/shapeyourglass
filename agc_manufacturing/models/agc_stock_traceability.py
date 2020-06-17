@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
+
 from odoo import api, fields, models
+
 
 rec = 0
 def autoIncrement():
@@ -19,7 +21,7 @@ class AgcStockTraceability(models.TransientModel):
 
     def _make_dict_move(self, level, parent_id, move_line, unfoldable=False):
         """
-        Add tlot internal reference in the dictionary
+        Add lot internal reference in the dictionary
         """
         data = super(AgcStockTraceability, self)._make_dict_move(level, parent_id, move_line, unfoldable=unfoldable)
         data[0].update({'internal_ref': move_line.lot_id.ref})

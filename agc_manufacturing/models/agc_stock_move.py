@@ -7,35 +7,43 @@ from odoo.exceptions import ValidationError
 class AGCStockMove(models.Model):
     _inherit = 'stock.move'
 
-    def _get_sale_order_line(self, moves):
-        for move in moves:
-            if move.sale_line_id:
-                return move.sale_line_id
-            elif move.raw_material_production_id:
-                if len(move.raw_material_production_id.move_dest_ids or []) == 1:
-                    return self._get_sale_order_line(move.raw_material_production_id.move_dest_ids)
-                elif len(move.raw_material_production_id.move_finished_ids or []) == 1:
-                    return self._get_sale_order_line(move.raw_material_production_id.move_finished_ids)
-                else:
-                    return False
-            elif len(move.move_dest_ids or []) == 1:
-                return self._get_sale_order_line(move.move_dest_ids)
+    def _get_sale_order_line(self):
+        """
+        Go through the linked stock moves in a bottom-up way in order to find an so line.
+        """
+        self.ensure_one()
+        # return the first so line we find.
+        if self.sale_line_id:
+            return self.sale_line_id
+        # if the stock move is a component of an MO go through the MO in order to find its stock move destination.
+        elif self.raw_material_production_id:
+            if len(self.raw_material_production_id.move_dest_ids or []) == 1:
+                return self.raw_material_production_id.move_dest_ids._get_sale_order_line()
+            # If the MO has no destination it could because its a subcontracted MO.
+            elif self.raw_material_production_id.subcontract_move_dest_id:
+                return self.raw_material_production_id.subcontract_move_dest_id._get_sale_order_line()
             else:
                 return False
+        # Try to find an so line with the next stock move.
+        elif len(self.move_dest_ids or []) == 1:
+            return self.move_dest_ids._get_sale_order_line()
+        else:
+            return False
 
     def _get_subcontract_bom(self):
-        """ Overridden Method """
+        """
+        Overridden Method
+        If we are in the pf_configure process.
+        Use the BoM specified in the manufacturing step linked to this subcontract demand.
+        """
         res = super(AGCStockMove, self)._get_subcontract_bom()
         if self.env.context.get('pf_configure', False):
-            so_line = self._get_sale_order_line(self.move_dest_ids)
+            so_line = self.move_dest_ids._get_sale_order_line() if self.move_dest_ids else False
             if so_line:
-                for spec_line in so_line.product_manufacture_spec_ids.sorted(key=lambda spec: spec.sequence):
-                    if not spec_line.production_id:
-                        if spec_line.bom_id.type == 'subcontract' and spec_line.product_id != self.product_id:
-                            raise ValidationError(
-                                _('Product ({}) is not the one expected ({} expected or the BOM {} is not of type subcontract.)').format(spec_line.product_id.name_get(), self.product_id.name_get(), spec_line.bom_id.name))
-                        else:
-                            return spec_line.bom_id
+                # If an so line has been found return the BoM of the first spec_line which is not already linked to an MO
+                spec_line = so_line.find_next_unlinked_product_spec(self.product_id, subcontracted=True)
+                if spec_line:
+                    return spec_line.bom_id
         return res
 
     def _create_out_svl(self, forced_quantity=None):
