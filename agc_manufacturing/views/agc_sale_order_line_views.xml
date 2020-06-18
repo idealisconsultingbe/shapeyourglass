@@ -57,7 +57,7 @@
                         </group>
                     </group>
                     <field name="product_manufacture_step_ids">
-                        <tree editable="bottom">
+                        <tree editable="bottom" create="false" delete="false">
                             <field name="sale_order_state" invisible="1"/>
                             <field name="configuration_is_done" invisible="1"/>
                             <field name="product_id" readonly="1"/>
@@ -72,6 +72,8 @@
                         </tree>
                     </field>
                 </sheet>
+                <footer>
+                </footer>
             </form>
         </field>
     </record>

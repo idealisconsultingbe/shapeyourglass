@@ -70,7 +70,7 @@ class AGCSaleOrderLine(models.Model):
                 if step_line.product_id != product_id:
                     raise ValidationError(_('Product ({}) is not the one expected ({} expected)').format(step_line.product_id.name_get(), product_id.name_get()))
                 elif subcontracted and step_line.bom_id.type != 'subcontract':
-                    raise ValidationError(_('the BOM {} is not of type subcontract').format(step_line.bom_id.name))
+                    raise ValidationError(_('the BOM {} is not of type subcontract').format(step_line.bom_id.name_get()))
                 else:
                     return step_line
         return False
