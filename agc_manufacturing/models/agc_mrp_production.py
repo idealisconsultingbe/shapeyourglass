@@ -2,6 +2,7 @@
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from math import ceil
 
 
 class AGCProduction(models.Model):
@@ -9,7 +10,7 @@ class AGCProduction(models.Model):
 
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'production_id', string='Finished Product Manufacturing Step')
     subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')
-    routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False,
+    routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False, required=True,
                                  states={'draft': [('readonly', False)]},
                                  domain="""[
                                  '&',
@@ -29,6 +30,30 @@ class AGCProduction(models.Model):
         for production in self:
             if len(production.product_manufacture_step_ids or []) > 1:
                 raise UserError(_('MO should not have more than one Finished Product Manufacturing Step. See MO({})').format(production.name))
+
+    def _get_moves_raw_values(self):
+        if self.env.context.get('pf_configure', False):
+            moves = []
+            for production in self:
+                if production.product_id.categ_id.product_type == 'finished_product':
+                    product_per_ms = production.product_manufacture_step_ids.sale_line_id.finished_product_quantity
+                    factor = ceil(production.product_qty / product_per_ms) / production.bom_id.product_qty
+                else:
+                    factor = production.product_uom_id._compute_quantity(production.product_qty,
+                                                                         production.bom_id.product_uom_id) / production.bom_id.product_qty
+                routing_efficiency = self.routing_id.routing_efficiency_id.efficiency / 100
+                bom_efficiency = self.bom_id.efficiency / 100
+                factor = factor / routing_efficiency / bom_efficiency
+                boms, lines = production.bom_id.explode(production.product_id, factor,
+                                                        picking_type=production.bom_id.picking_type_id)
+                for bom_line, line_data in lines:
+                    if bom_line.child_bom_id and bom_line.child_bom_id.type == 'phantom' or \
+                            bom_line.product_id.type not in ['product', 'consu']:
+                        continue
+                    moves.append(production._get_move_raw_values(bom_line, line_data))
+            return moves
+        else:
+            return super(AGCProduction, self)._get_moves_raw_values()
 
     def _generate_workorders(self, exploded_boms):
         """ Overridden method

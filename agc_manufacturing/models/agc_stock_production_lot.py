@@ -64,10 +64,12 @@ class AgcProductionLot(models.Model):
             res_model, res_id, ref = self.env['stock.traceability.report']._get_reference(line)
             if res_model == 'mrp.production':
                 mrp_production = self.env[res_model].browse(res_id)
-                initial_product_name = initial_move.product_id.name_get()[0][1]
                 bom_code = mrp_production.bom_id.code
                 routing_name = mrp_production.routing_id.name_get()[0][1] if mrp_production.routing_id else ''
-                generated_reference = "[{}: {} + {}]".format(initial_product_name, bom_code, routing_name)
+                ms_length = int(mrp_production.bom_id.mothersheet_length)
+                ms_width = int(mrp_production.bom_id.mothersheet_width)
+                ms_size = "[L{}xW{}]".format(ms_length, ms_width)
+                generated_reference = "[{}{} + {}]".format(ms_size if ms_length and ms_width else '', bom_code, routing_name)
             else:
                 generated_reference = "[{}]".format(initial_move.product_id.name_get()[0][1])
         return generated_reference
