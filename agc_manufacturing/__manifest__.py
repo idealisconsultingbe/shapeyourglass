@@ -12,6 +12,7 @@
         'base',
         'mrp',
         'sale',
+        'sale_margin',
         'product',
         'purchase',
         'stock',

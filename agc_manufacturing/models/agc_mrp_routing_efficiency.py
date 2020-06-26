@@ -10,8 +10,7 @@ class AGCRoutingEfficiency(models.Model):
 
     name = fields.Char(string='Complexity Name', size=64, translate=True, required=True)
     efficiency = fields.Integer(string='Yield (%)', default=100, help='This parameter allows to adapt Routing efficiency, its value must be inluded between 0 and 100.\n'
-                                                                      'If it is lower than 100 it will impact cost evaluation of the manufacturing process.\n'
-                                                                      'It will also impact the quantity of raw material send to the manufacturing location.\n')
+                                                                      'If it is lower than 100 it will impact the cost evaluation of the manufacturing process.\n')
 
     @api.constrains('efficiency')
     def _check_efficiency_domain(self):

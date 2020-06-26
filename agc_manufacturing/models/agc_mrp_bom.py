@@ -8,8 +8,8 @@ class AGCBom(models.Model):
     _inherit = 'mrp.bom'
 
     efficiency = fields.Integer(string='Yield (%)', default=100, help='This parameter allows to adapt the efficiency of the BoM, its value must be included between 0 and 100.'
-                                                                      'If it is lower than 100 it will impact cost evaluation of the manufacturing process.'
-                                                                      'It will also impact the quantity of raw material send to the manufacturing location.')
+                                                                      'If it is lower than 100 it will impact the cost evaluation of the manufacturing process.'
+                                                                      'It will also impact the quantity of raw materials send to the manufacturing location.')
     mothersheet_length = fields.Float(string='Mothersheet Length (mm)', default=0.0)
     mothersheet_width = fields.Float(string='Mothersheet Width (mm)', default=0.0)
     product_id = fields.Many2one('product.product', required=True)

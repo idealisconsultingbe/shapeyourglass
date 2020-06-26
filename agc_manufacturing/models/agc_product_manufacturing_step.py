@@ -18,12 +18,11 @@ class AGCProductManufacturingStep(models.Model):
     bom_id = fields.Many2one('mrp.bom', string='Bill of Material', domain="[('product_id', '=', product_id), ('active', '=', True)]")
     bom_type = fields.Selection(related='bom_id.type', string='BoM Type')
     bom_efficiency = fields.Integer(string='BoM  Yield (%)', help='This parameter allows to adapt BOM efficiency. Its value must be lower or equal to 100 and higher than zero.\n'
-                                                                  'A value lower than 100 will impact cot evaluation of the manufacturing process.\n'
-                                                                  'It will also impact the quantity of raw material send to the manufacturing location.\n')
+                                                                  'A value lower than 100 will impact the cost evaluation of the manufacturing process.\n'
+                                                                  'It will also impact the quantity of raw materials send to the manufacturing location.\n')
     routing_id = fields.Many2one('mrp.routing', string='Routing', domain="[('product_id', '=', product_id), ('active', '=', True)]")
     routing_efficiency_id = fields.Many2one('mrp.routing.efficiency', string='Routing Complexity', help='This parameter allows to adapt Routing efficiency, its value must be included between 0 and 100.\n'
-                                                                                                        'If complexity as an efficiency lower than 100 it will impact cost evaluation of the manufacturing process.\n'
-                                                                                                        'It will also impact the quantity of raw material send to the manufacturing location.\n')
+                                                                                                        'If the complexity as an efficiency lower than 100 it will impact the cost evaluation of the manufacturing process.\n')
     currency_id = fields.Many2one('res.currency', related='sale_line_id.currency_id', string='Currency')
     price_unit = fields.Monetary(string='Unit Cost', default='0.0')
     production_id = fields.Many2one('mrp.production', string='Manufacturing Order')

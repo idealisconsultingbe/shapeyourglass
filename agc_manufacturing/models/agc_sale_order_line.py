@@ -10,8 +10,7 @@ class AGCSaleOrderLine(models.Model):
 
     button_configure_visible = fields.Boolean(string='Configure Finished Product Button Visibility', compute='_compute_button_configure_visible', help='Technical field used to compute finished product button visibility.')
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
-    finished_product_unit_cost = fields.Monetary(string='Finished Product Unit Cost', readonly=True, default=0.0)
-    finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1)
+    finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
     configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
 
     @api.depends('product_id.categ_id.product_type')
@@ -29,7 +28,7 @@ class AGCSaleOrderLine(models.Model):
     @api.onchange('finished_product_quantity')
     def _onchange_finished_product_quantity(self):
         for line in self:
-            if line.finished_product_unit_cost > 0.0:
+            if line.purchase_price > 0.0:
                 self.calculate_product_cost_action()
 
     def open_fp_configuration_view(self):
@@ -83,7 +82,7 @@ class AGCSaleOrderLine(models.Model):
         return sorted_steps[0] if sorted_steps else False
 
     def _reset_prices(self):
-        self.finished_product_unit_cost = 0.0
+        self.purchase_price = 0.0
         self.product_manufacture_step_ids.write({'price_unit': 0.0})
 
     def calculate_product_cost_action(self):
@@ -98,15 +97,6 @@ class AGCSaleOrderLine(models.Model):
             sorted_steps = self.product_manufacture_step_ids.sorted(key=lambda step: step.sequence, reverse=True)
             if not sorted_steps:
                 return self.open_fp_configuration_view()
-            elif len(sorted_steps) == 1:
-                step_line = sorted_steps[0]
-                work_center_cost = sum([(operation.time_cycle_manual / 60.0) * operation.workcenter_id.costs_hour for operation in step_line.routing_id.operation_ids])
-                bom_line_price = sum([line.product_id.standard_price * line.product_qty for line in step_line.bom_id.bom_line_ids])
-                bom_efficiency = step_line.bom_efficiency/100 or 1
-                routing_efficiency = step_line.routing_efficiency_id.efficiency/100 or 1
-                bom_qty = step_line.bom_id.product_qty or 1
-                step_line.price_unit = (bom_line_price + work_center_cost) / bom_efficiency / routing_efficiency / bom_qty
-                self.finished_product_unit_cost = step_line.price_unit / (self.finished_product_quantity or 1)
             else:
                 products_price_list = {}
                 for step_line in sorted_steps:
@@ -120,5 +110,5 @@ class AGCSaleOrderLine(models.Model):
                     bom_qty = step_line.bom_id.product_qty or 1
                     step_line.price_unit = (other_products_bom_lines_price + semi_finished_product_bom_lines_price + work_center_cost) / bom_efficiency / routing_efficiency / bom_qty
                     products_price_list[step_line.product_id.id] = step_line.price_unit
-                    self.finished_product_unit_cost = step_line.price_unit / (self.finished_product_quantity or 1)
+                self.purchase_price = sorted_steps[-1].price_unit / (self.finished_product_quantity or 1)
             return self.open_fp_configuration_view()
