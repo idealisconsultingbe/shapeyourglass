@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="stock.report_stock_inventory">
+        <div class="container-fluid o_stock_reports_page o_stock_reports_no_print">
+            <span t-if="lines" class="o_report_heading text-left"><h1>Traceability Report</h1></span>
+            <span><t t-esc="context"/></span>
+            <div class="o_stock_reports_table table-responsive">
+                <t t-if="not lines">
+                    <span class="text-center"><h1>No operation made on this lot.</h1></span>
+                </t>
+                <t t-if="lines">
+                    <table class="table">
+                        <thead>
+                            <tr class="o_report_header">
+                                <th class="o_report_line_header">Reference</th>
+                                <th class="o_report_line_header">Product</th>
+                                <th class="o_report_line_header">Date</th>
+                                <th class="o_report_line_header">Lot/Serial #</th>
+                                <th class="o_report_line_header">Internal Reference</th>
+                                <th class="o_report_line_header">From</th>
+                                <th class="o_report_line_header">To</th>
+                                <th class="o_report_line_header">Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-call="stock.report_mrp_line"/>
+                        </tbody>
+                    </table>
+                </t>
+            </div>
+        </div>
+    </template>
+</odoo>

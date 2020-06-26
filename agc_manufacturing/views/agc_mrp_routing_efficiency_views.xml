@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mrp_routing_efficiency_view_tree" model="ir.ui.view">
+        <field name="name">mrp.routing.efficiency.tree</field>
+        <field name="model">mrp.routing.efficiency</field>
+        <field name="arch" type="xml">
+            <tree name="mrp_routing_efficiency" editable="bottom">
+                <field name="name"/>
+                <field name="efficiency"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="mrp_routing_efficiency_view_form" model="ir.ui.view">
+        <field name="name">mrp.routing.efficiency.form</field>
+        <field name="model">mrp.routing.efficiency</field>
+        <field name="arch" type="xml">
+            <form name="product_manuf_step">
+                <sheet>
+                    <group name="main">
+                        <group name="sub_main_data">
+                            <field name="name"/>
+                        </group>
+                        <group name="specifications">
+                            <field name="efficiency"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="mrp_routing_efficiency_action" model="ir.actions.act_window">
+        <field name="name">Routing Efficiency</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">mrp.routing.efficiency</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <menuitem id="mrp_routing_efficiency_menu" name="Routing Efficiency" action="agc_manufacturing.mrp_routing_efficiency_action" parent="mrp.menu_mrp_bom" sequence="70"/>
+
+</odoo>
