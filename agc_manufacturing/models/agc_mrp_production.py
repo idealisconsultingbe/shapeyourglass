@@ -32,18 +32,26 @@ class AGCProduction(models.Model):
                 raise UserError(_('MO should not have more than one Finished Product Manufacturing Step. See MO({})').format(production.name))
 
     def _get_moves_raw_values(self):
+        """ Overridden method
+
+        Changes to factor computation of finished product configuration to take into account the number of products per mothersheet
+        """
         if self.env.context.get('pf_configure', False):
             moves = []
             for production in self:
+
                 if production.product_id.categ_id.product_type == 'finished_product':
+                    so_line_uom = production.product_manufacture_step_ids.sale_line_id.product_uom_id
+                    qty_needed = so_line_uom._compute_quantity(
+                        production.product_manufacture_step_ids.sale_line_id.product_uom_qty,
+                        production.bom_id.product_uom_id)
                     product_per_ms = production.product_manufacture_step_ids.sale_line_id.finished_product_quantity
-                    factor = ceil(production.product_qty / product_per_ms) / production.bom_id.product_qty
+                    factor = (qty_needed / product_per_ms) / production.bom_id.product_qty
                 else:
                     factor = production.product_uom_id._compute_quantity(production.product_qty,
                                                                          production.bom_id.product_uom_id) / production.bom_id.product_qty
-                routing_efficiency = self.routing_id.routing_efficiency_id.efficiency / 100 or 1
                 bom_efficiency = self.bom_id.efficiency / 100 or 1
-                factor = factor / routing_efficiency / bom_efficiency
+                factor = ceil(factor / bom_efficiency)
                 boms, lines = production.bom_id.explode(production.product_id, factor,
                                                         picking_type=production.bom_id.picking_type_id)
                 for bom_line, line_data in lines:
