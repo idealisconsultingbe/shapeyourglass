@@ -25,6 +25,7 @@
                             <field name="configuration_is_done" invisible="1"/>
                             <field name="product_id" readonly="1"/>
                             <field name="bom_id" string="BoM" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
+                            <field name="initial_bom_efficiency" string="Default Yield (%)" readonly="1"/>
                             <field name="bom_efficiency" string="Yield (%)" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
                             <field name="routing_id" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
                             <field name="routing_efficiency_id" string="Complexity" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
@@ -63,6 +64,7 @@
                             <field name="configuration_is_done" invisible="1"/>
                             <field name="product_id" readonly="1"/>
                             <field name="bom_id" string="BoM" readonly="1"/>
+                            <field name="initial_bom_efficiency" string="Default Yield (%)" readonly="1"/>
                             <field name="bom_efficiency" string="Yield (%)" readonly="1"/>
                             <field name="routing_id" readonly="1"/>
                             <field name="routing_efficiency_id" string="Complexity" readonly="1"/>
@@ -70,6 +72,7 @@
                             <field name="purchase_id" string="PO" readonly="1"/>
                             <field name="production_id" string="MO" readonly="1"/>
                             <field name="production_status" string="Status" readonly="1"/>
+                            <field name="production_date" string="Date" readonly="1"/>
                         </tree>
                     </field>
                 </sheet>

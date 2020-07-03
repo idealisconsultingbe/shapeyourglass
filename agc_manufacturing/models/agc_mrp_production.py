@@ -51,7 +51,7 @@ class AGCProduction(models.Model):
                 else:
                     factor = production.product_uom_id._compute_quantity(production.product_qty,
                                                                          production.bom_id.product_uom_id) / production.bom_id.product_qty
-                bom_efficiency = self.bom_id.efficiency / 100 or 1
+                bom_efficiency = production.product_manufacture_step_ids.bom_efficiency / 100 or 1
                 factor = factor / bom_efficiency
                 boms, lines = production.bom_id.explode(production.product_id, factor,
                                                         picking_type=production.bom_id.picking_type_id)
