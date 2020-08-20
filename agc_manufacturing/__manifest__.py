@@ -29,6 +29,7 @@
         'views/agc_stock_traceability_report.xml',
         'views/agc_sale_order_line_views.xml',
         'views/agc_sale_order_views.xml',
+        'views/agc_mrp_production_views.xml'
     ],
     'installable': True,
     'auto_install': False,

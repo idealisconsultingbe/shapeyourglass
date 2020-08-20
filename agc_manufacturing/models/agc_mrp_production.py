@@ -9,6 +9,7 @@ from math import ceil
 class AGCProduction(models.Model):
     _inherit = 'mrp.production'
 
+    sale_order_id = fields.Many2one('sale.order', string='Sale Order', compute='_compute_sale_order_id', store=True)
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'production_id', string='Finished Product Manufacturing Step')
     subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')
     routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False, required=True,
@@ -21,6 +22,13 @@ class AGCProduction(models.Model):
                                         '|',
                                             ('product_id','=',product_id),
                                             ('product_id','=',False)]""", check_company=True)
+
+    @api.depends('product_manufacture_step_ids')
+    def _compute_sale_order_id(self):
+        for production in self:
+            production.sale_order_id = False
+            if production.product_manufacture_step_ids and len(production.product_manufacture_step_ids.mapped('sale_line_id')) == 1:
+                production.sale_order_id = production.product_manufacture_step_ids[0].sale_line_id.order_id
 
     @api.constrains('product_manufacture_step_ids')
     def _check_product_manufacture_step_one2one(self):
