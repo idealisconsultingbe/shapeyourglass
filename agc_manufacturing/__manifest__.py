@@ -9,14 +9,8 @@
         """,
     'author': 'pfi@idealisconsulting.com, dwa@idealisconsulting.com - Idealis Consulting',
     'depends': [
-        'base',
-        'mrp',
-        'sale',
         'sale_margin',
-        'product',
         'purchase',
-        'stock',
-        'stock_account',
         'mrp_account',
     ],
     'data': [

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!--        <record id="product_pricelist_item_form_view" model="ir.ui.view">-->
+<!--            <field name="name">product.pricelist.item.form.view.inherited.pricelist.type</field>-->
+<!--            <field name="model">product.pricelist.item</field>-->
+<!--            <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>-->
+<!--            <field name="arch" type="xml">-->
+<!--                <xpath expr="//field[@name='base']" position="before">-->
+<!--                    <field name="parent_pricelist_type" invisible="1"/>-->
+<!--                    <field name="base_standard" attrs="{'invisible':['|', ('compute_price', '!=', 'formula'), ('parent_pricelist_type', '=', 'cumul')]}"/>-->
+<!--                    <field name="base_cumul" attrs="{'invisible':['|', ('compute_price', '!=', 'formula'), ('parent_pricelist_type', '!=', 'cumul')]}"/>-->
+<!--                </xpath>-->
+<!--                <xpath expr="//field[@name='base']" position="attributes">-->
+<!--                    <attribute name="invisible">1</attribute>-->
+<!--                </xpath>-->
+<!--            </field>-->
+<!--        </record>-->
+
+</odoo>
