@@ -9,15 +9,10 @@
         """,
     'author': 'pfi@idealisconsulting.com, dwa@idealisconsulting.com - Idealis Consulting',
     'depends': [
-        'base',
-        'mrp',
-        'sale',
         'sale_margin',
-        'product',
         'purchase',
-        'stock',
-        'stock_account',
-        'mrp_account',
+        'mrp_account_enterprise',
+        'mrp_workorder',
     ],
     'data': [
         'security/ir.model.access.csv',
@@ -29,7 +24,9 @@
         'views/agc_stock_traceability_report.xml',
         'views/agc_sale_order_line_views.xml',
         'views/agc_sale_order_views.xml',
-        'views/agc_mrp_production_views.xml'
+        'views/agc_mrp_production_views.xml',
+        'views/agc_stock_picking_views.xml',
+        'views/agc_mrp_workorder_views.xml'
     ],
     'installable': True,
     'auto_install': False,

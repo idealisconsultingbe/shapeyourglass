@@ -1,11 +1,20 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
-from odoo import fields, models, _
-from odoo.exceptions import ValidationError
+from odoo import api, fields, models
 
 
 class AGCStockMove(models.Model):
     _inherit = 'stock.move'
+
+    sale_order_line_id = fields.Many2one('sale.order.line', string='Sale Order Line', compute='_compute_sale_order_line_id', store=True)
+
+    @api.depends('sale_line_id',
+                 'move_dest_ids',
+                 'raw_material_production_id.move_dest_ids',
+                 'raw_material_production_id.subcontract_move_dest_id')
+    def _compute_sale_order_line_id(self):
+        for move in self:
+            move.sale_order_line_id = move._get_sale_order_line()
 
     def _get_sale_order_line(self):
         """

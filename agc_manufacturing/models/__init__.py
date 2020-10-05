@@ -14,3 +14,4 @@ from . import agc_stock_move
 from . import agc_sale_order
 from . import agc_stock_rule
 from . import agc_stock_picking
+from . import agc_mrp_workorder

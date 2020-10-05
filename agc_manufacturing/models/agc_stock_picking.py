@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
 
-from odoo import models, _
-from odoo.exceptions import ValidationError
+from odoo import models
 
 
 class AGCStockPicking(models.Model):

@@ -12,6 +12,7 @@ class AGCSaleOrderLine(models.Model):
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
     configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
+    stock_move_ids = fields.One2many('stock.move', 'sale_order_line_id', string='Stock Moves', readonly=True)
 
     @api.depends('product_id.categ_id.product_type')
     def _compute_button_configure_visible(self):
@@ -30,6 +31,11 @@ class AGCSaleOrderLine(models.Model):
         for line in self:
             if line.purchase_price > 0.0:
                 self.calculate_product_cost_action()
+
+    def action_cost_analysis(self):
+        self.ensure_one()
+        productions = self.product_manufacture_step_ids.mapped('production_id').filtered(lambda prod: prod.state == 'done')
+        return self.env.ref('mrp_account_enterprise.action_cost_struct_mrp_production').report_action(productions, config=False)
 
     def open_fp_configuration_view(self):
         """

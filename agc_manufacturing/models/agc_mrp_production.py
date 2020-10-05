@@ -73,7 +73,7 @@ class AGCProduction(models.Model):
             return super(AGCProduction, self)._get_moves_raw_values()
 
     def _generate_workorders(self, exploded_boms):
-        """ Overridden method
+        """ Overwritten method
 
         Standard method uses routing from BoM while we want to use routing from manufacturing order.
         """
@@ -92,7 +92,7 @@ class AGCProduction(models.Model):
         return workorders
 
     def _workorders_create(self, bom, bom_data):
-        """ Overridden method
+        """ Overwritten method
 
         Standard method uses routing from BoM while we want to use routing from manufacturing order.
         Changes were made on workorder creation, and on raw moves to reflect this new behaviour
@@ -108,16 +108,9 @@ class AGCProduction(models.Model):
         # Changes from standard
         for operation in self.routing_id.operation_ids:
             # end of changes
-            workorder = workorders.create({
-                'name': operation.name,
-                'production_id': self.id,
-                'workcenter_id': operation.workcenter_id.id,
-                'product_uom_id': self.product_id.uom_id.id,
-                'operation_id': operation.id,
-                'state': len(workorders) == 0 and 'ready' or 'pending',
-                'qty_producing': quantity,
-                'consumption': self.bom_id.consumption,
-            })
+            workorder_vals = self._prepare_workorder_vals(
+                operation, workorders, quantity)
+            workorder = workorders.create(workorder_vals)
             if workorders:
                 workorders[-1].next_work_order_id = workorder.id
                 workorders[-1]._start_nextworkorder()
@@ -156,4 +149,15 @@ class AGCProduction(models.Model):
                 for line in finished_move.move_line_ids:
                     if line.lot_id:
                         line.lot_id.unit_cost = finished_move.product_uom._compute_price(finished_move.price_unit, line.lot_id.product_uom_id)
+        return res
+
+    def _prepare_workorder_vals(self, operation, workorders, quantity):
+        """ Overridden method
+        Create automatically a stock production lot
+        """
+        res = super(AGCProduction, self)._prepare_workorder_vals(operation, workorders, quantity)
+        res['finished_lot_id'] = self.env['stock.production.lot'].create({
+                'product_id': self.product_id.id,
+                'company_id': self.company_id.id,
+            }).id
         return res

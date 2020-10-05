@@ -11,6 +11,9 @@
                     <field name="button_configure_visible" invisible="1"/>
                     <button string="FP Configuration" type="object" name="open_fp_configuration_view" class="btn-primary" attrs="{'invisible': [('button_configure_visible', '!=', True)]}"/>
                 </xpath>
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_cost_analysis" type="object" class="oe_stat_button" icon="fa-dollar" string="Cost Analysis" attrs="{'invisible': [('state', 'not in', ['sale', 'done'])]}"/>
+                </xpath>
             </data>
         </field>
     </record>
