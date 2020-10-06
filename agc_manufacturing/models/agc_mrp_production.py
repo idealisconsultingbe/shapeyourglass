@@ -25,6 +25,7 @@ class AGCProduction(models.Model):
 
     @api.depends('product_manufacture_step_ids')
     def _compute_sale_order_id(self):
+        """ Compute sale order according to manufacturing steps set on production """
         for production in self:
             production.sale_order_id = False
             if production.product_manufacture_step_ids and len(production.product_manufacture_step_ids.mapped('sale_line_id')) == 1:

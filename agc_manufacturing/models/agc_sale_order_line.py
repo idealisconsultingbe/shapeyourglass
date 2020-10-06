@@ -33,6 +33,7 @@ class AGCSaleOrderLine(models.Model):
                 self.calculate_product_cost_action()
 
     def action_cost_analysis(self):
+        """ Open report view of all done MO linked to sale order line """
         self.ensure_one()
         productions = self.product_manufacture_step_ids.mapped('production_id').filtered(lambda prod: prod.state == 'done')
         return self.env.ref('mrp_account_enterprise.action_cost_struct_mrp_production').report_action(productions, config=False)
