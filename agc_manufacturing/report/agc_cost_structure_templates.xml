@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="mrp_cost_structure" inherit_id="mrp_account_enterprise.mrp_cost_structure">
+        <xpath expr="//strong[hasclass('o_mrp_report_info')]" position="attributes">
+            <attribute name="style">color: Purple; font-size: larger;</attribute>
+        </xpath>
+    </template>
+</odoo>

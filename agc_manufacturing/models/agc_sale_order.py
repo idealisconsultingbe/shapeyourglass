@@ -8,11 +8,6 @@ from odoo.exceptions import ValidationError
 class AGCSaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    def action_cost_analysis(self):
-        self.ensure_one()
-        productions = self.env['mrp.production'].search([('sale_order_id', '=', self.id)]).filtered(lambda prod: prod.state == 'done')
-        return self.env.ref('mrp_account_enterprise.action_cost_struct_mrp_production').report_action(productions, config=False)
-
     def action_confirm(self):
         """
         Overridden Method
