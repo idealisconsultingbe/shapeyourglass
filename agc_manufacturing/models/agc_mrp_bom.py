@@ -11,6 +11,7 @@ class AGCBom(models.Model):
     mothersheet_length = fields.Float(string='Mothersheet Length (mm)', default=0.0)
     mothersheet_width = fields.Float(string='Mothersheet Width (mm)', default=0.0)
     product_id = fields.Many2one('product.product', required=True)
+    product_qty = fields.Float(help='MO created during the MTO process from this BOM will have a \'Quantity To Produce\' that is a factor of this quantity.')
 
     @api.constrains('efficiency')
     def _check_efficiency_domain(self):

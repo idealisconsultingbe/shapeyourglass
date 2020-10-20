@@ -13,7 +13,7 @@ class AGCProductManufacturingStep(models.Model):
     sale_line_id = fields.Many2one('sale.order.line', string='Sale Order Line', required=True, ondelete='cascade')
     configuration_is_done = fields.Boolean(related='sale_line_id.configuration_is_done', string='Finished Product Configuration is Done', help='Technical field that helps to know whether the Finished Product configuration is done.')
     sale_order_state = fields.Selection(related='sale_line_id.order_id.state', string='Sale Order Status')
-    sequence = fields.Integer(string='Sequence', help="Used to order the 'Product Manufacturing Step' tree view")
+    sequence = fields.Integer(string='Sequence', help="Used to order the 'Product Manufacturing Step' tree view", default=1)
     product_id = fields.Many2one('product.product', string='Product', required=True)
     bom_id = fields.Many2one('mrp.bom', string='Bill of Material', domain="[('product_id', '=', product_id), ('active', '=', True)]")
     bom_type = fields.Selection(related='bom_id.type', string='BoM Type')
