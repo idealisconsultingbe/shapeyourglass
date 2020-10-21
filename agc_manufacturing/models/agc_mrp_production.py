@@ -52,26 +52,16 @@ class AGCProduction(models.Model):
 
                 if production.product_id.categ_id.product_type == 'finished_product' and production.product_manufacture_step_ids:
                     so_line_uom = production.product_manufacture_step_ids.sale_line_id.product_uom
-
-                    # qty_needed = so_line_uom._compute_quantity(
-                    #     production.product_manufacture_step_ids.sale_line_id.product_uom_qty,
-                    #     production.bom_id.product_uom_id)
-                    # TODO: Should use quantity from production instead of sale order line
                     qty_needed = so_line_uom._compute_quantity(production.product_qty, production.bom_id.product_uom_id)
                     product_per_ms = production.product_manufacture_step_ids.sale_line_id.finished_product_quantity
                     factor = ceil(qty_needed / product_per_ms) / production.bom_id.product_qty
+                    boms, lines = production.bom_id.explode(production.product_id, factor, picking_type=production.bom_id.picking_type_id)
+                    for bom_line, line_data in lines:
+                        if bom_line.child_bom_id and bom_line.child_bom_id.type == 'phantom' or bom_line.product_id.type not in ['product', 'consu']:
+                            continue
+                        moves.append(production._get_move_raw_values(bom_line, line_data))
                 else:
-                    factor = production.product_uom_id._compute_quantity(production.product_qty,
-                                                                         production.bom_id.product_uom_id) / production.bom_id.product_qty
-                bom_efficiency = production.product_manufacture_step_ids.bom_efficiency / 100 or 1
-                factor = ceil(factor / bom_efficiency)
-                boms, lines = production.bom_id.explode(production.product_id, factor,
-                                                        picking_type=production.bom_id.picking_type_id)
-                for bom_line, line_data in lines:
-                    if bom_line.child_bom_id and bom_line.child_bom_id.type == 'phantom' or \
-                            bom_line.product_id.type not in ['product', 'consu']:
-                        continue
-                    moves.append(production._get_move_raw_values(bom_line, line_data))
+                    moves.extend(super(AGCProduction, production)._get_moves_raw_values())
             return moves
         else:
             return super(AGCProduction, self)._get_moves_raw_values()
