@@ -5,46 +5,12 @@
         <field name="model">mrp.workorder</field>
         <field name="inherit_id" ref="mrp_workorder.mrp_workorder_view_form_tablet"/>
         <field name="arch" type="xml">
-            <xpath expr="//button[@name='action_continue']" position="before">
-                <field name="production_id" invisible="1"/>
-                <button type="action" name="%(agc_manufacturing.action_workorder_change_production_qty)d"
-                                        context="{'default_mo_id': production_id, 'default_workorder_id': active_id, 'default_product_qty': qty_producing}"
-                                        string="Validate" attrs="{'invisible': ['|', ('is_user_working', '=', False),'|', ('is_last_step', '=', True), '&amp;', '|', ('quality_state', '=', 'none'), ('test_type', '!=', 'passfail'), ('test_type', '!=', 'text')]}" barcode_trigger="cloMO" class="btn-primary"/>
 
-                <button type="action" name="%(agc_manufacturing.action_workorder_change_production_qty)d"
-                                        context="{'default_mo_id': production_id, 'default_workorder_id': active_id, 'default_product_qty': qty_producing}"
-                                        string="Validate" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('component_qty_to_do', '&lt;', 0)]}" barcode_trigger="cloMO" class="btn-primary"/>
-
-                <button type="action" name="%(agc_manufacturing.action_workorder_change_production_qty)d"
-                        context="{'default_mo_id': production_id, 'default_workorder_id': active_id, 'default_product_qty': qty_producing}"
-                        string="Validate" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('consumption', '=', 'strict'), '&amp;', ('consumption', '=', 'flexible'), ('component_qty_to_do', '&gt;=', 0)]}" barcode_trigger="cloMO" class="btn-primary"/>
-            </xpath>
-            <xpath expr="//button[@name='action_next'][1]" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='action_next'][2]" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='action_next'][3]" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='action_continue'][1]" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='action_continue'][2]" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='action_print']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//button[@name='record_production']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
             <xpath expr="//button[@name='do_finish']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-            <xpath expr="//button[@name='action_first_skipped_step']" position="attributes">
-                <attribute name="invisible">1</attribute>
+            <xpath expr="//button[@name='action_open_manufacturing_order']" position="after">
+                <button name="stop_production_and_close_mo" type="object" string="Mark as Done and Close MO" icon="fa-check" attrs="{'invisible': ['|', ('is_user_working', '=', False), ('qty_produced', '=', 0)]}" class="btn-primary"/>
             </xpath>
         </field>
     </record>

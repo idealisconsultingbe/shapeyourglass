@@ -30,10 +30,3 @@ class ChangeProductionQty(models.TransientModel):
             return self.workorder_id.action_next()
         else:
             return False
-
-    def change_prod_qty(self):
-        """ overridden method
-        Add context used to retrieve production in mrp.bom explode() method """
-        self.ensure_one()
-        self = self.with_context(production_id=self.mo_id.id)
-        return super(ChangeProductionQty, self).change_prod_qty()

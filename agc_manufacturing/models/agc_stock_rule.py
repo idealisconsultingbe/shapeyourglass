@@ -4,7 +4,6 @@
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from itertools import groupby
-from math import ceil
 
 from odoo import api, models, fields, _
 from odoo.exceptions import ValidationError, UserError
@@ -33,57 +32,19 @@ class AGCStockRule(models.Model):
         Linked the MO to its manufacturing step
         In the MO use the BoM and the routing specified in the manufacturing step.
         """
-
-        def get_max_product_qty(so_line):
-            """ Return max producible quantity in a bottom-up logic """
-            mo_qty = dict()
-            for step in so_line.product_manufacture_step_ids:
-                if step.sequence == 1:
-                    qty_needed = so_line.product_uom_qty
-                    factor = ceil(qty_needed/so_line.finished_product_quantity)
-                    factor = factor / step.bom_id.product_qty
-                    factor = ceil(factor * (100 / step.bom_efficiency))
-                    qty_to_produce = factor * step.bom_id.product_qty * so_line.finished_product_quantity
-                else:
-                    qty_needed = mo_qty[step.sequence-1]['raw_mat'][step.product_id.id]['qty_needed']
-                    factor = qty_needed / step.bom_id.product_qty
-                    factor = ceil(factor * (100 / step.bom_efficiency))
-                    qty_to_produce = factor * step.bom_id.product_qty
-
-                mo_qty.update({
-                    step.sequence: {
-                        'qty_needed': qty_needed,
-                        'qty_to_produce': qty_to_produce,
-                        'product_id': step.product_id.id,
-                        'factor': factor,
-                        'raw_mat': dict()}})
-
-                for raw_line in step.bom_id.bom_line_ids:
-                    mo_qty[step.sequence]['raw_mat'].update({raw_line.product_id.id: {
-                        'qty_needed': raw_line.product_qty * factor,
-                        'bom_qty': raw_line.product_qty}})
-
-            i = max(mo_qty.keys()) - 1
-            while i > 0:
-                max_raw_mat_produced = mo_qty[i+1]['qty_to_produce']
-                raw_mat_product_id = mo_qty[i+1]['product_id']
-                raw_mat_bom_qty = mo_qty[i]['raw_mat'][raw_mat_product_id]['bom_qty']
-                factor = ceil(max_raw_mat_produced / raw_mat_bom_qty)
-                mo_qty[i]['qty_to_produce'] = (mo_qty[i]['qty_to_produce'] / mo_qty[i]['factor']) * factor
-                mo_qty[i]['max_factor'] = factor
-                i -= 1
-            return mo_qty[1]['qty_to_produce']
-
         res = super(AGCStockRule, self)._prepare_mo_vals(product_id, product_qty, product_uom, location_id, name, origin, company_id, values, bom)
         if self.env.context.get('pf_configure', False):
             move_dest = values.get('move_dest_ids', False)
             so_line = move_dest._get_sale_order_line() if move_dest else False
             if so_line:
                 step_line = so_line.find_next_unlinked_manufacturing_step(product_id)
+                so_line_mo_qty = self.env.context.get('mo_qty', False)
+                qty_needed = so_line_mo_qty[so_line.id][step_line.sequence]['qty_needed'] if so_line and step_line else 0
                 if step_line.sequence == 1:
-                    res['product_qty'] = get_max_product_qty(so_line)
+                    res['product_qty'] = so_line.max_producible_quantity
                 res.update({
                     'bom_id': step_line.bom_id.id,
+                    'qty_needed': qty_needed,
                     'routing_id': step_line.routing_id.id,
                     'product_manufacture_step_ids': [(4, step_line.id, 0)]
                 })

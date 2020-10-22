@@ -9,6 +9,7 @@ from math import ceil
 class AGCProduction(models.Model):
     _inherit = 'mrp.production'
 
+    qty_needed = fields.Float('Min Quantity To Produce', default=0.0, digits='Product Unit of Measure', readonly=True, states={'draft': [('readonly', False)]}, help="Minimum quantity to produce in order to reach the quantity ordered by the customer.")
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', compute='_compute_sale_order_id', store=True)
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'production_id', string='Finished Product Manufacturing Step')
     subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')
@@ -22,6 +23,16 @@ class AGCProduction(models.Model):
                                         '|',
                                             ('product_id','=',product_id),
                                             ('product_id','=',False)]""", check_company=True)
+
+    @api.depends('move_raw_ids.state', 'move_finished_ids.state', 'workorder_ids', 'workorder_ids.state',
+                 'qty_produced', 'move_raw_ids.quantity_done', 'product_qty')
+    def _compute_state(self):
+        """
+        """
+        super(AGCProduction, self)._compute_state()
+        for production in self.filtered(lambda p: p.state == 'progress' and p.bom_id.consumption == 'flexible'):
+            if all(move.state in ['cancel', 'done'] for move in production.move_raw_ids):
+                production.state = 'done'
 
     @api.depends('product_manufacture_step_ids')
     def _compute_sale_order_id(self):

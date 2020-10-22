@@ -16,6 +16,7 @@
                         </group>
                         <group name="cost">
                             <field name="purchase_price" readonly="1" attrs="{'invisible': [('configuration_is_done', '!=', True)]}" string="Unit Cost"/>
+                            <field name="max_producible_quantity" readonly="1" attrs="{'invisible': [('configuration_is_done', '!=', True)]}"/>
                         </group>
                     </group>
                     <notebook>
@@ -29,7 +30,7 @@
                                     <field name="product_id" readonly="1"/>
                                     <field name="bom_id" string="BoM" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
                                     <field name="initial_bom_efficiency" string="Default Yield (%)" readonly="1"/>
-                                    <field name="bom_efficiency" string="Yield (%)" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
+                                    <field name="bom_efficiency" string="Yield (%)" required="1"/>
                                     <field name="routing_id" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
                                     <field name="routing_efficiency_id" string="Complexity" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
                                     <field name="price_unit" readonly="1"/>
@@ -82,6 +83,7 @@
                         </group>
                         <group name="cost">
                             <field name="purchase_price" string="Unit Cost" readonly="1"/>
+                            <field name="max_producible_quantity" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
