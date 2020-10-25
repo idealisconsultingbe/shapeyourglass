@@ -8,6 +8,7 @@ class AGCMrpWorkorder(models.Model):
     _inherit = 'mrp.workorder'
 
     finished_lot_id = fields.Many2one('stock.production.lot', readonly=True)
+    qty_needed = fields.Float(string='Min Quantity To Produce', related='production_id.qty_needed', help="Minimum quantity to produce in order to reach the quantity ordered by the customer.")
 
     def record_production(self):
         """
