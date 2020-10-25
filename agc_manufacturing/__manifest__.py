@@ -15,7 +15,6 @@
         'mrp_workorder',
     ],
     'data': [
-        'wizard/change_production_qty_views.xml',
         'security/ir.model.access.csv',
         'views/agc_product_category_views.xml',
         'views/agc_mrp_routing_views.xml',

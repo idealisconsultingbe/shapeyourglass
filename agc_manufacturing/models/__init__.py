@@ -16,3 +16,4 @@ from . import agc_stock_rule
 from . import agc_stock_picking
 from . import agc_mrp_workorder
 from . import agc_stock_move_line
+from . import agc_quality_point

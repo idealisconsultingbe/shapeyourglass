@@ -28,6 +28,9 @@ class AGCProduction(models.Model):
                  'qty_produced', 'move_raw_ids.quantity_done', 'product_qty')
     def _compute_state(self):
         """
+        Override standard method
+        In standard in case of flexible bom, MOs could stayed in status 'in progress' even if all move_raw_ids are done or cancelled
+        Change this behaviour set the status to 'done'!
         """
         super(AGCProduction, self)._compute_state()
         for production in self.filtered(lambda p: p.state == 'progress' and p.bom_id.consumption == 'flexible'):

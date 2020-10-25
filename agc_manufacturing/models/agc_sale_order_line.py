@@ -13,7 +13,7 @@ class AGCSaleOrderLine(models.Model):
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
     max_producible_quantity = fields.Integer(string='Max Producible Qty', default=1, compute='calculate_max_producible_qty', help='This quantity is the quantity that are going to be produced if we have an efficiency of 100% at each step.')
-    configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
+    configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, copy=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
     stock_move_ids = fields.One2many('stock.move', 'sale_order_line_id', string='Stock Moves', readonly=True)
 
     @api.depends('product_id.categ_id.product_type')
@@ -65,12 +65,12 @@ class AGCSaleOrderLine(models.Model):
             if step.sequence == 1:
                 qty_needed = self.product_uom_qty
                 factor = ceil(qty_needed / self.finished_product_quantity)
-                factor = factor / step.bom_id.product_qty
+                factor = factor / (step.bom_id.product_qty or 1.0)
                 factor = ceil(factor * (100 / step.bom_efficiency))
                 qty_to_produce = factor * step.bom_id.product_qty * self.finished_product_quantity
             else:
                 qty_needed = mo_qty[step.sequence - 1]['raw_mat'][step.product_id.id]['qty_needed']
-                factor = qty_needed / step.bom_id.product_qty
+                factor = qty_needed / (step.bom_id.product_qty or 1.0)
                 factor = ceil(factor * (100 / step.bom_efficiency))
                 qty_to_produce = factor * step.bom_id.product_qty
 
