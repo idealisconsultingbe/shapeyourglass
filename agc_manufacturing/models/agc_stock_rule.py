@@ -12,6 +12,20 @@ from odoo.exceptions import ValidationError, UserError
 class AGCStockRule(models.Model):
     _inherit = 'stock.rule'
 
+    @api.model
+    def _get_procurements_to_merge_groupby(self, procurement):
+        """
+        Override standard method.
+        Prevent procurement with finished product to be merged together!
+        """
+        if procurement.product_id.categ_id.product_type == 'finished_product':
+            key = procurement.product_id, procurement.product_uom, procurement.values['propagate_date'], \
+                  procurement.values['propagate_date_minimum_delta'], procurement.values['propagate_cancel'], \
+                  procurement.values['prevent_merge_id']
+        else:
+            key = super(AGCStockRule, self)._get_procurements_to_merge_groupby(procurement)
+        return key
+
     def _get_purchase_order_line_step_vals(self, product_id, values):
         """
         Linked the purchase order line to its manufacturing step.

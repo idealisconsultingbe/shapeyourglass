@@ -8,6 +8,23 @@ class AGCStockMove(models.Model):
 
     sale_order_line_id = fields.Many2one('sale.order.line', string='Sale Order Line', compute='_compute_sale_order_line_id', store=True)
 
+    def _merge_moves(self, merge_into=False):
+        """
+        Override the standard method -> it will prevent move using finished product to be merged.
+        """
+        moves_using_pf = self.filtered(lambda m: m.product_id.categ_id.product_type == 'finished_product')
+        merged_moves = super(AGCStockMove, self - moves_using_pf)._merge_moves(merge_into)
+        return (merged_moves | moves_using_pf)
+
+    def _prepare_procurement_values(self):
+        """
+        Override standard method -> add the prevent_merge_id values that will prevent procurement to be merged together.
+        """
+        values = super(AGCStockMove, self)._prepare_procurement_values()
+        if self.product_id.categ_id.product_type == 'finished_product':
+            values['prevent_merge_id'] = self.id
+        return values
+
     @api.depends('sale_line_id',
                  'move_dest_ids',
                  'raw_material_production_id.move_dest_ids',

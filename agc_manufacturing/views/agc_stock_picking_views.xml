@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_picking_form" model="ir.ui.view">
-        <field name="name">view.picking.form.inherited.sale.order.line</field>
+    <record id="picking_form_view" model="ir.ui.view">
+        <field name="name">agc.picking.view.form</field>
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
+            <field name="origin" position="after">
+                <field name="sale_order_ids" widget="many2many_tags"/>
+            </field>
             <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='description_picking']" position="after">
                 <field name="sale_order_line_id" optional="show"/>
             </xpath>
+        </field>
+    </record>
+
+    <record id="picking_tree_view" model="ir.ui.view">
+        <field name="name">agc.picking.view.tree</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <field name="origin" position="after">
+                <field name="sale_order_ids" widget="many2many_tags" optional="show"/>
+            </field>
         </field>
     </record>
 </odoo>
