@@ -18,7 +18,7 @@ class AGCStockRule(models.Model):
         Override standard method.
         Prevent procurement with finished product to be merged together!
         """
-        if procurement.product_id.categ_id.product_type == 'finished_product':
+        if procurement.product_id.categ_id.product_type != 'other':
             key = procurement.product_id, procurement.product_uom, procurement.values['propagate_date'], \
                   procurement.values['propagate_date_minimum_delta'], procurement.values['propagate_cancel'], \
                   procurement.values['prevent_merge_id']
