@@ -56,6 +56,8 @@ class AGCStockRule(models.Model):
                 qty_needed = so_line_mo_qty[so_line.id][step_line.sequence]['qty_needed'] if so_line_mo_qty and step_line else 0
                 if step_line.sequence == 1:
                     res['product_qty'] = so_line.max_producible_quantity
+                if 'name' in res:
+                    del res['name']
                 res.update({
                     'bom_id': step_line.bom_id.id,
                     'qty_needed': qty_needed,
