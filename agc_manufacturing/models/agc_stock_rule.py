@@ -53,7 +53,7 @@ class AGCStockRule(models.Model):
             if so_line:
                 step_line = so_line.find_next_unlinked_manufacturing_step(product_id)
                 so_line_mo_qty = self.env.context.get('mo_qty', False)
-                qty_needed = so_line_mo_qty[so_line.id][step_line.sequence]['qty_needed'] if so_line and step_line else 0
+                qty_needed = so_line_mo_qty[so_line.id][step_line.sequence]['qty_needed'] if so_line_mo_qty and step_line else 0
                 if step_line.sequence == 1:
                     res['product_qty'] = so_line.max_producible_quantity
                 res.update({

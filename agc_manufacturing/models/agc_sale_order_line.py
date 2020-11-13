@@ -46,10 +46,11 @@ class AGCSaleOrderLine(models.Model):
     def calculate_max_producible_qty(self):
         """ Compute the maximum producible quantity"""
         for line in self:
-            if line .configuration_is_done:
-                line.max_producible_quantity = line.get_max_product_qty()[1]['qty_to_produce']
-            else:
-                line.max_producible_quantity = 0
+            line.max_producible_quantity = 0
+            if line.configuration_is_done:
+                max_product_qty = line.get_max_product_qty()
+                if max_product_qty:
+                    line.max_producible_quantity = max_product_qty[1]['qty_to_produce']
 
     def _action_launch_stock_rule(self, previous_product_uom_qty=False):
         so_line_mo_qty = {}
@@ -86,16 +87,16 @@ class AGCSaleOrderLine(models.Model):
                 mo_qty[step.sequence]['raw_mat'].update({raw_line.product_id.id: {
                     'qty_needed': raw_line.product_qty * factor,
                     'bom_qty': raw_line.product_qty}})
-
-        i = max(mo_qty.keys()) - 1
-        while i > 0:
-            max_raw_mat_produced = mo_qty[i + 1]['qty_to_produce']
-            raw_mat_product_id = mo_qty[i + 1]['product_id']
-            raw_mat_bom_qty = mo_qty[i]['raw_mat'][raw_mat_product_id]['bom_qty']
-            factor = ceil(max_raw_mat_produced / raw_mat_bom_qty)
-            mo_qty[i]['qty_to_produce'] = (mo_qty[i]['qty_to_produce'] / mo_qty[i]['factor']) * factor
-            mo_qty[i]['max_factor'] = factor
-            i -= 1
+        if mo_qty:
+            i = max(mo_qty.keys()) - 1
+            while i > 0:
+                max_raw_mat_produced = mo_qty[i + 1]['qty_to_produce']
+                raw_mat_product_id = mo_qty[i + 1]['product_id']
+                raw_mat_bom_qty = mo_qty[i]['raw_mat'][raw_mat_product_id]['bom_qty']
+                factor = ceil(max_raw_mat_produced / raw_mat_bom_qty)
+                mo_qty[i]['qty_to_produce'] = (mo_qty[i]['qty_to_produce'] / mo_qty[i]['factor']) * factor
+                mo_qty[i]['max_factor'] = factor
+                i -= 1
         return mo_qty
 
     def open_fp_configuration_view(self):
