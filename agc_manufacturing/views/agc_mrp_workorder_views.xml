@@ -5,6 +5,12 @@
         <field name="model">mrp.workorder</field>
         <field name="inherit_id" ref="mrp_workorder.mrp_workorder_view_form_tablet"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='allow_producing_quantity_change']" position="after">
+                <field name="order_blocked" invisible="1"/>
+            </xpath>
+            <xpath expr="//button[@name='button_start']" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', ('is_user_working', '=', True), ('working_state', '=', 'blocked'), ('order_blocked', '=', True)]}</attribute>
+            </xpath>
             <xpath expr="//div[@class='workorder_bar']/div[@class='workorder_bar_center o_workorder_bar_content']/div" position="before">
                 <div name="min_qty_to_produce">
                     <label for="qty_needed" class="oe_inline"/>
