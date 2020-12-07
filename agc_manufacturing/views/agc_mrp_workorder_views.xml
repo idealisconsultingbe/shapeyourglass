@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <record id="mrp_production_workorder_form_view_inherit" model="ir.ui.view">
+        <field name="name">mrp.production.workorder.form.view.inherited.missing.components</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <field name="order_blocked" invisible="1"/>
+                <div role="alert" class="alert alert-warning" attrs="{'invisible': [('order_blocked', '=', False)]}">
+                    <field name="order_blocked_message"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
     <record id="mrp_workorder_view_form_tablet" model="ir.ui.view">
         <field name="name">mrp.workorder.view.form.tablet.inherited.button.close.mo</field>
         <field name="model">mrp.workorder</field>
