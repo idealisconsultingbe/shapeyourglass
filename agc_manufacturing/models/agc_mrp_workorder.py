@@ -13,12 +13,9 @@ class AGCMrpWorkorder(models.Model):
     order_blocked_message = fields.Text(string='Order Blocked Comment', compute='_compute_order_blocked')
 
     @api.depends('production_id.move_raw_ids.state',
-                 'production_id.move_finished_ids.state',
                  'production_id.workorder_ids',
                  'production_id.workorder_ids.state',
-                 'production_id.qty_produced',
-                 'production_id.move_raw_ids.quantity_done',
-                 'production_id.product_qty')
+                 'production_id.move_raw_ids.reserved_availability')
     def _compute_order_blocked(self):
         """
         Block order if there are components without reserved quantities.
@@ -30,7 +27,8 @@ class AGCMrpWorkorder(models.Model):
             if order.production_id.move_raw_ids._get_relevant_state_among_moves() in ['waiting', 'partially_available']:
                 if any(order.production_id.move_raw_ids.filtered(lambda m: not m.reserved_availability)):
                     order.order_blocked = True
-                    order.order_blocked_message = _('There are components without any reserved quantities. Please check availability of those components before processing production.')
+                    order.order_blocked_message = _('There are components without any reserved quantities ({}). Please check availability of those components before processing production.')\
+                        .format(', '.join(order.production_id.move_raw_ids.filtered(lambda m: not m.reserved_availability).mapped('product_id.name')))
 
     def name_get(self):
         """ Overwritten method in order to add production SO name to display name """

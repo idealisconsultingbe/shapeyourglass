@@ -26,7 +26,7 @@
             <xpath expr="//button[@name='button_start']" position="attributes">
                 <attribute name="attrs">{'invisible': ['|', '|', ('is_user_working', '=', True), ('working_state', '=', 'blocked'), ('order_blocked', '=', True)]}</attribute>
             </xpath>
-            <xpath expr="//div[@class='workorder_bar']/div[@class='workorder_bar_center o_workorder_bar_content']/div" position="before">
+            <xpath expr="//div[hasclass('workorder_bar')]/div[hasclass('o_workorder_bar_content')]/div" position="before">
                 <div name="min_qty_to_produce">
                     <label for="qty_needed" class="oe_inline"/>
                     <field name="qty_needed" class="oe_inline"/>
