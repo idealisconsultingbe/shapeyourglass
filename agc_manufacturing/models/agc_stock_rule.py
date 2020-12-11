@@ -12,6 +12,20 @@ from odoo.exceptions import ValidationError, UserError
 class AGCStockRule(models.Model):
     _inherit = 'stock.rule'
 
+    @api.model
+    def _get_procurements_to_merge_groupby(self, procurement):
+        """
+        Override standard method.
+        Prevent procurement with finished product to be merged together!
+        """
+        if procurement.product_id.categ_id.product_type != 'other':
+            key = procurement.product_id, procurement.product_uom, procurement.values['propagate_date'], \
+                  procurement.values['propagate_date_minimum_delta'], procurement.values['propagate_cancel'], \
+                  procurement.values['prevent_merge_id']
+        else:
+            key = super(AGCStockRule, self)._get_procurements_to_merge_groupby(procurement)
+        return key
+
     def _get_purchase_order_line_step_vals(self, product_id, values):
         """
         Linked the purchase order line to its manufacturing step.
@@ -38,12 +52,19 @@ class AGCStockRule(models.Model):
             so_line = move_dest._get_sale_order_line() if move_dest else False
             if so_line:
                 step_line = so_line.find_next_unlinked_manufacturing_step(product_id)
-                if step_line:
-                    res.update({
-                        'bom_id': step_line.bom_id.id,
-                        'routing_id': step_line.routing_id.id,
-                        'product_manufacture_step_ids': [(4, step_line.id, 0)]
-                    })
+                so_line_mo_qty = self.env.context.get('mo_qty', False)
+                qty_needed = so_line_mo_qty[so_line.id][step_line.sequence]['qty_needed'] if so_line_mo_qty and step_line else 0
+                if step_line.sequence == 1:
+                    res['product_qty'] = so_line.max_producible_quantity
+                if 'name' in res:
+                    del res['name']
+                res.update({
+                    'bom_id': step_line.bom_id.id,
+                    'qty_needed': qty_needed,
+                    'routing_id': step_line.routing_id.id,
+                    'product_manufacture_step_ids': [(4, step_line.id, 0)]
+                })
+
         return res
 
     @api.model
@@ -142,7 +163,7 @@ class AGCStockRule(models.Model):
                         procurement.product_uom, procurement.company_id,
                         procurement.values, po))
             self.env['purchase.order.line'].sudo().create(po_line_values)
-        # Custom changes happens here
+        # Custom changes happen here
         if self.env.context.get('pf_configure', False):
             if po.order_line.filtered(lambda line: line.product_manufacture_step_ids):
                 po.button_confirm()

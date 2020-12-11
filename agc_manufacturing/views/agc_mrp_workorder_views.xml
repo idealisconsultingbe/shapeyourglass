@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mrp_production_workorder_form_view_inherit" model="ir.ui.view">
+        <field name="name">mrp.production.workorder.form.view.inherited.missing.components</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <field name="order_blocked" invisible="1"/>
+                <div role="alert" class="alert alert-warning" attrs="{'invisible': [('order_blocked', '=', False)]}">
+                    <field name="order_blocked_message"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="mrp_workorder_view_form_tablet" model="ir.ui.view">
+        <field name="name">mrp.workorder.view.form.tablet.inherited.button.close.mo</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp_workorder.mrp_workorder_view_form_tablet"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='allow_producing_quantity_change']" position="after">
+                <field name="order_blocked" invisible="1"/>
+            </xpath>
+            <xpath expr="//button[@name='button_start']" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', ('is_user_working', '=', True), ('working_state', '=', 'blocked'), ('order_blocked', '=', True)]}</attribute>
+            </xpath>
+            <xpath expr="//div[hasclass('workorder_bar')]/div[hasclass('o_workorder_bar_content')]/div" position="before">
+                <div name="min_qty_to_produce">
+                    <label for="qty_needed" class="oe_inline"/>
+                    <field name="qty_needed" class="oe_inline"/>
+                    <label for="product_uom_id" string="" class="oe_inline"/>
+                    <field name="product_uom_id" options="{'no_open': True}" class="oe_inline" readonly="1"/>
+                </div> /
+            </xpath>
+            <xpath expr="//button[@name='do_finish']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_open_manufacturing_order']" position="after">
+                <button name="stop_production_and_close_mo" type="object" string="Mark as Done and Close MO" icon="fa-check" attrs="{'invisible': ['|', ('is_user_working', '=', False), ('qty_produced', '=', 0)]}" class="btn-primary"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

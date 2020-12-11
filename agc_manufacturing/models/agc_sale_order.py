@@ -6,7 +6,7 @@ from odoo.exceptions import ValidationError
 
 
 class AGCSaleOrder(models.Model):
-    _inherit = "sale.order"
+    _inherit = 'sale.order'
 
     def action_confirm(self):
         """

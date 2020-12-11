@@ -9,6 +9,8 @@ from math import ceil
 class AGCProduction(models.Model):
     _inherit = 'mrp.production'
 
+    qty_needed = fields.Float(string='Min Quantity To Produce', default=0.0, digits='Product Unit of Measure', readonly=True, states={'draft': [('readonly', False)]}, help="Minimum quantity to produce in order to reach the quantity ordered by the customer.")
+    sale_order_id = fields.Many2one('sale.order', string='Sale Order', compute='_compute_sale_order_id', store=True)
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'production_id', string='Finished Product Manufacturing Step')
     subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')
     routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False, required=True,
@@ -21,6 +23,27 @@ class AGCProduction(models.Model):
                                         '|',
                                             ('product_id','=',product_id),
                                             ('product_id','=',False)]""", check_company=True)
+
+    @api.depends('move_raw_ids.state', 'move_finished_ids.state', 'workorder_ids', 'workorder_ids.state',
+                 'qty_produced', 'move_raw_ids.quantity_done', 'product_qty')
+    def _compute_state(self):
+        """
+        Override standard method
+        In standard in case of flexible bom, MOs could stayed in status 'in progress' even if all move_raw_ids are done or cancelled
+        Change this behaviour set the status to 'done'!
+        """
+        super(AGCProduction, self)._compute_state()
+        for production in self.filtered(lambda p: p.state == 'progress' and p.bom_id.consumption == 'flexible'):
+            if all(move.state in ['cancel', 'done'] for move in production.move_raw_ids):
+                production.state = 'done'
+
+    @api.depends('product_manufacture_step_ids')
+    def _compute_sale_order_id(self):
+        """ Compute sale order according to manufacturing steps set on production """
+        for production in self:
+            production.sale_order_id = False
+            if production.product_manufacture_step_ids and len(production.product_manufacture_step_ids.mapped('sale_line_id')) == 1:
+                production.sale_order_id = production.product_manufacture_step_ids[0].sale_line_id.order_id
 
     @api.constrains('product_manufacture_step_ids')
     def _check_product_manufacture_step_one2one(self):
@@ -43,29 +66,22 @@ class AGCProduction(models.Model):
 
                 if production.product_id.categ_id.product_type == 'finished_product' and production.product_manufacture_step_ids:
                     so_line_uom = production.product_manufacture_step_ids.sale_line_id.product_uom
-                    qty_needed = so_line_uom._compute_quantity(
-                        production.product_manufacture_step_ids.sale_line_id.product_uom_qty,
-                        production.bom_id.product_uom_id)
+                    qty_needed = so_line_uom._compute_quantity(production.product_qty, production.bom_id.product_uom_id)
                     product_per_ms = production.product_manufacture_step_ids.sale_line_id.finished_product_quantity
                     factor = ceil(qty_needed / product_per_ms) / production.bom_id.product_qty
+                    boms, lines = production.bom_id.explode(production.product_id, factor, picking_type=production.bom_id.picking_type_id)
+                    for bom_line, line_data in lines:
+                        if bom_line.child_bom_id and bom_line.child_bom_id.type == 'phantom' or bom_line.product_id.type not in ['product', 'consu']:
+                            continue
+                        moves.append(production._get_move_raw_values(bom_line, line_data))
                 else:
-                    factor = production.product_uom_id._compute_quantity(production.product_qty,
-                                                                         production.bom_id.product_uom_id) / production.bom_id.product_qty
-                bom_efficiency = self.bom_id.efficiency / 100 or 1
-                factor = factor / bom_efficiency
-                boms, lines = production.bom_id.explode(production.product_id, factor,
-                                                        picking_type=production.bom_id.picking_type_id)
-                for bom_line, line_data in lines:
-                    if bom_line.child_bom_id and bom_line.child_bom_id.type == 'phantom' or \
-                            bom_line.product_id.type not in ['product', 'consu']:
-                        continue
-                    moves.append(production._get_move_raw_values(bom_line, line_data))
+                    moves.extend(super(AGCProduction, production)._get_moves_raw_values())
             return moves
         else:
             return super(AGCProduction, self)._get_moves_raw_values()
 
     def _generate_workorders(self, exploded_boms):
-        """ Overridden method
+        """ Overwritten method
 
         Standard method uses routing from BoM while we want to use routing from manufacturing order.
         """
@@ -84,7 +100,7 @@ class AGCProduction(models.Model):
         return workorders
 
     def _workorders_create(self, bom, bom_data):
-        """ Overridden method
+        """ Overwritten method
 
         Standard method uses routing from BoM while we want to use routing from manufacturing order.
         Changes were made on workorder creation, and on raw moves to reflect this new behaviour
@@ -100,16 +116,9 @@ class AGCProduction(models.Model):
         # Changes from standard
         for operation in self.routing_id.operation_ids:
             # end of changes
-            workorder = workorders.create({
-                'name': operation.name,
-                'production_id': self.id,
-                'workcenter_id': operation.workcenter_id.id,
-                'product_uom_id': self.product_id.uom_id.id,
-                'operation_id': operation.id,
-                'state': len(workorders) == 0 and 'ready' or 'pending',
-                'qty_producing': quantity,
-                'consumption': self.bom_id.consumption,
-            })
+            workorder_vals = self._prepare_workorder_vals(
+                operation, workorders, quantity)
+            workorder = workorders.create(workorder_vals)
             if workorders:
                 workorders[-1].next_work_order_id = workorder.id
                 workorders[-1]._start_nextworkorder()
@@ -148,4 +157,15 @@ class AGCProduction(models.Model):
                 for line in finished_move.move_line_ids:
                     if line.lot_id:
                         line.lot_id.unit_cost = finished_move.product_uom._compute_price(finished_move.price_unit, line.lot_id.product_uom_id)
+        return res
+
+    def _prepare_workorder_vals(self, operation, workorders, quantity):
+        """ Overridden method
+        Create automatically a stock production lot
+        """
+        res = super(AGCProduction, self)._prepare_workorder_vals(operation, workorders, quantity)
+        res['finished_lot_id'] = self.env['stock.production.lot'].create({
+                'product_id': self.product_id.id,
+                'company_id': self.company_id.id,
+            }).id
         return res

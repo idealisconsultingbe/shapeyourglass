@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
+from math import ceil
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
@@ -7,12 +8,11 @@ from odoo.exceptions import UserError
 class AGCBom(models.Model):
     _inherit = 'mrp.bom'
 
-    efficiency = fields.Integer(string='Yield (%)', default=100, help='This parameter allows to adapt the efficiency of the BoM, its value must be included between 0 and 100.'
-                                                                      'If it is lower than 100 it will impact the cost evaluation of the manufacturing process.'
-                                                                      'It will also impact the quantity of raw materials send to the manufacturing location.')
+    does_produce_mothersheet = fields.Boolean(string='Mothersheet', default=False, help='Flag this option if this bom consume DLS and produce mothersheet.')
     mothersheet_length = fields.Float(string='Mothersheet Length (mm)', default=0.0)
     mothersheet_width = fields.Float(string='Mothersheet Width (mm)', default=0.0)
     product_id = fields.Many2one('product.product', required=True)
+    product_qty = fields.Float(help='MO created during the MTO process from this BOM will have a \'Quantity To Produce\' that is a factor of this quantity.')
 
     @api.constrains('efficiency')
     def _check_efficiency_domain(self):

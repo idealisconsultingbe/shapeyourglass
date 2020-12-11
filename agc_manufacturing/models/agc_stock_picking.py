@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
 
-from odoo import models, _
-from odoo.exceptions import ValidationError
+from odoo import api, models, fields
 
 
 class AGCStockPicking(models.Model):
     _inherit = 'stock.picking'
+
+    sale_order_ids = fields.Many2many('sale.order', 'picking_sale_order_rel', 'picking_id', 'so_id', string='PF Sale Order', compute='_compute_sale_order_id', store=True)
+
+    @api.depends('move_lines.sale_order_line_id.order_id')
+    def _compute_sale_order_id(self):
+        """
+        Retrieve to which Sale Orders the picking is linked.
+        """
+        for picking in self:
+            picking.sale_order_ids = picking.move_lines.mapped('sale_order_line_id.order_id')
 
     def _prepare_subcontract_mo_vals(self, subcontract_move, bom):
         """

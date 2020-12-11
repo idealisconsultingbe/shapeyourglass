@@ -7,9 +7,9 @@
         <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
         <field name="arch" type="xml">
            <field name="company_id" position="before">
-               <field name="mothersheet_length"/>
-               <field name="mothersheet_width"/>
-               <field name="efficiency"/>
+               <field name="does_produce_mothersheet"/>
+               <field name="mothersheet_length" attrs="{'invisible': [('does_produce_mothersheet', '=', False)], 'required': [('does_produce_mothersheet', '=', True)]}"/>
+               <field name="mothersheet_width" attrs="{'invisible': [('does_produce_mothersheet', '=', False)], 'required': [('does_produce_mothersheet', '=', True)]}"/>
            </field>
         </field>
     </record>

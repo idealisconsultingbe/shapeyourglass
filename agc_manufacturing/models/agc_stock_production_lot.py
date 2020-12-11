@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Idealis Consulting. See LICENSE file for full copyright and licensing details.
-from odoo import api, fields, models, _
+from odoo import api, fields, models
 
 
 class AgcProductionLot(models.Model):
@@ -64,12 +64,13 @@ class AgcProductionLot(models.Model):
             res_model, res_id, ref = self.env['stock.traceability.report']._get_reference(line)
             if res_model == 'mrp.production':
                 mrp_production = self.env[res_model].browse(res_id)
+                does_produce_mothersheet = mrp_production.bom_id.does_produce_mothersheet
                 bom_code = mrp_production.bom_id.code
                 routing_name = mrp_production.routing_id.name_get()[0][1] if mrp_production.routing_id else ''
                 ms_length = int(mrp_production.bom_id.mothersheet_length)
                 ms_width = int(mrp_production.bom_id.mothersheet_width)
                 ms_size = "[L{}xW{}]".format(ms_length, ms_width)
-                generated_reference = "[{}{} + {}]".format(ms_size if ms_length and ms_width else '', bom_code, routing_name)
+                generated_reference = "[{}{} + {}]".format(ms_size if does_produce_mothersheet else '', bom_code, routing_name)
             else:
                 generated_reference = "[{}]".format(initial_move.product_id.name_get()[0][1])
         return generated_reference

@@ -13,13 +13,14 @@ class AGCProductManufacturingStep(models.Model):
     sale_line_id = fields.Many2one('sale.order.line', string='Sale Order Line', required=True, ondelete='cascade')
     configuration_is_done = fields.Boolean(related='sale_line_id.configuration_is_done', string='Finished Product Configuration is Done', help='Technical field that helps to know whether the Finished Product configuration is done.')
     sale_order_state = fields.Selection(related='sale_line_id.order_id.state', string='Sale Order Status')
-    sequence = fields.Integer(string='Sequence', help="Used to order the 'Product Manufacturing Step' tree view")
+    sequence = fields.Integer(string='Sequence', help="Used to order the 'Product Manufacturing Step' tree view", default=1)
     product_id = fields.Many2one('product.product', string='Product', required=True)
     bom_id = fields.Many2one('mrp.bom', string='Bill of Material', domain="[('product_id', '=', product_id), ('active', '=', True)]")
     bom_type = fields.Selection(related='bom_id.type', string='BoM Type')
-    bom_efficiency = fields.Integer(string='BoM  Yield (%)', help='This parameter allows to adapt BOM efficiency. Its value must be lower or equal to 100 and higher than zero.\n'
-                                                                  'A value lower than 100 will impact the cost evaluation of the manufacturing process.\n'
-                                                                  'It will also impact the quantity of raw materials send to the manufacturing location.\n')
+    initial_bom_efficiency = fields.Integer(string='Initial BoM  Yield (%)', compute='_get_initial_bom_yield')
+    bom_efficiency = fields.Integer(string='BoM  Yield (%)', default=100, help='This parameter allows to adapt BOM efficiency. Its value must be lower or equal to 100 and higher than zero.\n'
+                                                                               'A value lower than 100 will impact the cost evaluation of the manufacturing process.\n'
+                                                                               'It will also impact the quantity of raw materials send to the manufacturing location.\n')
     routing_id = fields.Many2one('mrp.routing', string='Routing', domain="[('product_id', '=', product_id), ('active', '=', True)]")
     routing_efficiency_id = fields.Many2one('mrp.routing.efficiency', string='Routing Complexity', help='This parameter allows to adapt Routing efficiency, its value must be included between 0 and 100.\n'
                                                                                                         'If the complexity as an efficiency lower than 100 it will impact the cost evaluation of the manufacturing process.\n')
@@ -27,9 +28,20 @@ class AGCProductManufacturingStep(models.Model):
     price_unit = fields.Monetary(string='Unit Cost', default='0.0')
     production_id = fields.Many2one('mrp.production', string='Manufacturing Order')
     production_status = fields.Selection(related='production_id.state', string='MO Status', help='Display the status of the Manufacturing Order')
+    production_date = fields.Datetime(related='production_id.date_planned_finished', srting='MO Finished Date', help='Date at which you planned to finish the production')
     purchase_line_id = fields.Many2one('purchase.order.line', string='Purchase Order Line')
     purchase_id = fields.Many2one('purchase.order', related='purchase_line_id.order_id', string='Purchase Order')
     state = fields.Selection([('to_update', 'To Update'), ('updated', 'Updated'), ('locked', 'Locked')], string='status', default='to_update')
+
+    @api.depends('bom_id')
+    def _get_initial_bom_yield(self):
+        for manuf_step in self:
+            if manuf_step.bom_id:
+                sfp_bom_line = manuf_step.bom_id.bom_line_ids.filtered(lambda line: line.product_id.categ_id.product_type == 'semi_finished_product')
+                sfp_qty = sfp_bom_line[0].product_qty if sfp_bom_line else 1
+                manuf_step.initial_bom_efficiency = manuf_step.bom_id.product_qty / sfp_qty * 100
+            else:
+                manuf_step.initial_bom_efficiency = 0
 
     @api.constrains('bom_efficiency')
     def _check_efficiency_domain(self):
@@ -47,14 +59,6 @@ class AGCProductManufacturingStep(models.Model):
         """
         if self.routing_id:
             self.routing_efficiency_id = self.routing_id.routing_efficiency_id or self.routing_efficiency_id
-
-    @api.onchange('bom_id')
-    def _onchange_bom_id(self):
-        """
-        Pre-filled the bom efficiency with the efficiency specified on the BoM.
-        """
-        if self.bom_id:
-            self.bom_efficiency = self.bom_id.efficiency or self.bom_efficiency
 
     def update_product_manufacturing_step_action(self):
         """

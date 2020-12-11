@@ -3,6 +3,7 @@
 
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
+from math import ceil
 
 
 class AGCSaleOrderLine(models.Model):
@@ -11,7 +12,9 @@ class AGCSaleOrderLine(models.Model):
     button_configure_visible = fields.Boolean(string='Configure Finished Product Button Visibility', compute='_compute_button_configure_visible', help='Technical field used to compute finished product button visibility.')
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
-    configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
+    max_producible_quantity = fields.Integer(string='Max Producible Qty', default=1, compute='calculate_max_producible_qty', help='This quantity is the quantity that are going to be produced if we have an efficiency of 100% at each step.')
+    configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, copy=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
+    stock_move_ids = fields.One2many('stock.move', 'sale_order_line_id', string='Stock Moves', readonly=True)
 
     @api.depends('product_id.categ_id.product_type')
     def _compute_button_configure_visible(self):
@@ -30,6 +33,71 @@ class AGCSaleOrderLine(models.Model):
         for line in self:
             if line.purchase_price > 0.0:
                 self.calculate_product_cost_action()
+
+    def action_cost_analysis(self):
+        """ Open report view of all done MO linked to sale order line """
+        self.ensure_one()
+        productions = self.product_manufacture_step_ids.mapped('production_id').filtered(lambda prod: prod.state == 'done')
+        return self.env.ref('mrp_account_enterprise.action_cost_struct_mrp_production').report_action(productions, config=False)
+
+    @api.depends('product_manufacture_step_ids.bom_id.product_qty', 'product_manufacture_step_ids.bom_efficiency',
+                 'product_manufacture_step_ids.bom_id.bom_line_ids', 'product_manufacture_step_ids.product_id',
+                 'product_manufacture_step_ids.sequence', 'finished_product_quantity', 'product_uom_qty', 'configuration_is_done')
+    def calculate_max_producible_qty(self):
+        """ Compute the maximum producible quantity"""
+        for line in self:
+            line.max_producible_quantity = 0
+            if line.configuration_is_done:
+                max_product_qty = line.get_max_product_qty()
+                if max_product_qty:
+                    line.max_producible_quantity = max_product_qty[1]['qty_to_produce']
+
+    def _action_launch_stock_rule(self, previous_product_uom_qty=False):
+        so_line_mo_qty = {}
+        for line in self:
+            so_line_mo_qty[line.id] = line.get_max_product_qty()
+        return super(AGCSaleOrderLine, self.with_context(mo_qty=so_line_mo_qty))._action_launch_stock_rule(previous_product_uom_qty=previous_product_uom_qty)
+
+    def get_max_product_qty(self):
+        """Compute the min qty needed and the maximum producible quantity for each MO"""
+        self.ensure_one()
+        mo_qty = dict()
+        for step in self.product_manufacture_step_ids:
+            if step.sequence == 1:
+                qty_needed = self.product_uom_qty
+                factor = ceil(qty_needed / self.finished_product_quantity)
+                factor = factor / (step.bom_id.product_qty or 1.0)
+                factor = ceil(factor * (100 / step.bom_efficiency))
+                qty_to_produce = factor * step.bom_id.product_qty * self.finished_product_quantity
+            else:
+                qty_needed = mo_qty[step.sequence - 1]['raw_mat'][step.product_id.id]['qty_needed']
+                factor = qty_needed / (step.bom_id.product_qty or 1.0)
+                factor = ceil(factor * (100 / step.bom_efficiency))
+                qty_to_produce = factor * step.bom_id.product_qty
+
+            mo_qty.update({
+                step.sequence: {
+                    'qty_needed': qty_needed,
+                    'qty_to_produce': qty_to_produce,
+                    'product_id': step.product_id.id,
+                    'factor': factor,
+                    'raw_mat': dict()}})
+
+            for raw_line in step.bom_id.bom_line_ids:
+                mo_qty[step.sequence]['raw_mat'].update({raw_line.product_id.id: {
+                    'qty_needed': raw_line.product_qty * factor,
+                    'bom_qty': raw_line.product_qty}})
+        if mo_qty:
+            i = max(mo_qty.keys()) - 1
+            while i > 0:
+                max_raw_mat_produced = mo_qty[i + 1]['qty_to_produce']
+                raw_mat_product_id = mo_qty[i + 1]['product_id']
+                raw_mat_bom_qty = mo_qty[i]['raw_mat'][raw_mat_product_id]['bom_qty']
+                factor = ceil(max_raw_mat_produced / raw_mat_bom_qty)
+                mo_qty[i]['qty_to_produce'] = (mo_qty[i]['qty_to_produce'] / mo_qty[i]['factor']) * factor
+                mo_qty[i]['max_factor'] = factor
+                i -= 1
+        return mo_qty
 
     def open_fp_configuration_view(self):
         """
