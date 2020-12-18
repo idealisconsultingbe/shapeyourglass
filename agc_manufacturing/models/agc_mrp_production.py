@@ -99,6 +99,18 @@ class AGCProduction(models.Model):
                     original_one = temp_workorders[0]
         return workorders
 
+    def _plan_workorders(self):
+        """
+        Overridden method
+        When planning workorder, set state to 'waiting' is at least one workorder line has no quantity reserved
+        """
+        self.ensure_one()
+        res = super(AGCProduction, self)._plan_workorders()
+        for order in self.workorder_ids:
+            if not all(order.raw_workorder_line_ids.mapped('qty_reserved')):
+                order.state = 'waiting'
+        return res
+
     def _workorders_create(self, bom, bom_data):
         """ Overwritten method
 

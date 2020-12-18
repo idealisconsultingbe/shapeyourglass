@@ -9,26 +9,27 @@ class AGCMrpWorkorder(models.Model):
 
     finished_lot_id = fields.Many2one('stock.production.lot', readonly=True)
     qty_needed = fields.Float(string='Min Quantity To Produce', related='production_id.qty_needed', help="Minimum quantity to produce in order to reach the quantity ordered by the customer.")
-    order_blocked = fields.Boolean(string='Order Blocked', compute='_compute_order_blocked', help='Block order if at least one component has none quantity reserved.')
-    order_blocked_message = fields.Text(string='Order Blocked Comment', compute='_compute_order_blocked')
+    state = fields.Selection(selection_add=[('waiting', 'Waiting for Components'), ('ready',)])
+    order_blocked_message = fields.Text(string='Order Blocked Message', compute='_compute_order_blocked_message')
 
-    @api.depends('production_id.move_raw_ids.state',
-                 'production_id.workorder_ids',
-                 'production_id.workorder_ids.state',
-                 'production_id.move_raw_ids.reserved_availability')
-    def _compute_order_blocked(self):
-        """
-        Block order if there are components without reserved quantities.
-        When order is blocked it is no longer possible to start production
-        """
+    @api.depends('state')
+    def _compute_order_blocked_message(self):
+        """ Compute message of a 'waiting for components' workorder """
         for order in self:
-            order.order_blocked = False
             order.order_blocked_message = ''
-            if order.production_id.move_raw_ids._get_relevant_state_among_moves() in ['waiting', 'partially_available']:
-                if any(order.production_id.move_raw_ids.filtered(lambda m: not m.reserved_availability)):
-                    order.order_blocked = True
-                    order.order_blocked_message = _('There are components without any reserved quantities ({}). Please check availability of those components before processing production.')\
-                        .format(', '.join(order.production_id.move_raw_ids.filtered(lambda m: not m.reserved_availability).mapped('product_id.name')))
+            if order.state == 'waiting':
+                order.order_blocked_message = _('There are components without any reserved quantities ({}). Please check availability of those components before processing production.')\
+                        .format(', '.join(order.raw_workorder_line_ids.filtered(lambda l: not l.qty_reserved).mapped('product_id.name')))
+
+    def _refresh_wo_lines(self):
+        """
+        Overridden method
+        When refreshing WO lines, set workorder state to ready if all lines have reserved quantities
+        """
+        super(AGCMrpWorkorder, self)._refresh_wo_lines()
+        for workorder in self:
+            if all(workorder.raw_workorder_line_ids.mapped('qty_reserved')):
+                workorder.state = 'ready'
 
     def name_get(self):
         """ Overwritten method in order to add production SO name to display name """
@@ -38,6 +39,7 @@ class AGCMrpWorkorder(models.Model):
 
     def record_production(self):
         """
+        Overridden method
         In case we interrupt a production before the end we do not record production for the current step that has not been validated.
         """
         if self.env.context.get('interrupt_production', False):
@@ -63,6 +65,13 @@ class AGCMrpWorkorder(models.Model):
         """
         self.ensure_one()
         self.working_state = self.workcenter_id.working_state
-        if self.order_blocked:
+        if self.state == 'waiting':
             self.working_state = 'blocked'
         return super(AGCMrpWorkorder, self).open_tablet_view()
+
+    def action_assign(self):
+        """ Same method as the 'check availability' method on MO """
+        self.ensure_one()
+        self.production_id.move_raw_ids._action_assign()
+        self.production_id.workorder_ids._refresh_wo_lines()
+        return True
