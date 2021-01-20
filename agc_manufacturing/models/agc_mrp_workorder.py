@@ -27,8 +27,8 @@ class AGCMrpWorkorder(models.Model):
         When refreshing WO lines, set workorder state to ready if all lines have reserved quantities
         """
         super(AGCMrpWorkorder, self)._refresh_wo_lines()
-        for workorder in self:
-            if all(workorder.raw_workorder_line_ids.mapped('qty_reserved')):
+        for workorder in self.filtered(lambda w: w.state != 'done'):
+            if all(workorder.move_raw_ids.mapped('reserved_availability')):
                 workorder.state = 'ready'
 
     def name_get(self):

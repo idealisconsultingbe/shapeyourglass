@@ -13,7 +13,7 @@ class AGCProduction(models.Model):
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', compute='_compute_sale_order_id', store=True)
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'production_id', string='Finished Product Manufacturing Step')
     subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')
-    routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False, required=True,
+    routing_id = fields.Many2one('mrp.routing', string='Routing', readonly=True, compute=False,
                                  states={'draft': [('readonly', False)]},
                                  domain="""[
                                  '&',

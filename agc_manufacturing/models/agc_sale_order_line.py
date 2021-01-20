@@ -104,7 +104,7 @@ class AGCSaleOrderLine(models.Model):
         Return a different view depending on whether the SO is confirmed or not
         """
         self.ensure_one()
-        if self.state not in ('sale', 'done'):
+        if self.state not in ('sale', 'done', 'cancel'):
             view_id = self.env.ref('agc_manufacturing.sale_order_line_view_form').id
         else:
             view_id = self.env.ref('agc_manufacturing.sale_order_line_confirmed_view_form').id
