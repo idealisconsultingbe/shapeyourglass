@@ -1,0 +1,4 @@
+[submodule "addons-odoo-apps"]
+	path = addons-odoo-apps
+	url = git@git.myidealis.be:odoo_apps/addons.git
+	branch = 13.0
