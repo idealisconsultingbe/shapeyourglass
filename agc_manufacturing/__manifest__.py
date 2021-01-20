@@ -28,6 +28,7 @@
         'views/agc_stock_move_views.xml',
         'views/agc_stock_picking_views.xml',
         'views/agc_mrp_workorder_views.xml',
+        'wizard/mrp_product_produce_views.xml',
         'report/agc_cost_structure_templates.xml',
     ],
     'installable': True,

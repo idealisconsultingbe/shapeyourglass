@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mrp_product_produce_wizard_form_view" model="ir.ui.view">
+        <field name="name">agc.MRP Product Produce</field>
+        <field name="model">mrp.product.produce</field>
+        <field name="inherit_id" ref="mrp.view_mrp_product_produce_wizard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='do_produce']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//button[@special='cancel']" position="before">
+                <button name="button_close_mo" type="object" string="Finish Production" class="btn-primary"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
