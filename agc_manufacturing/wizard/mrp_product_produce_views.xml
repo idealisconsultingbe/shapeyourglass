@@ -9,7 +9,7 @@
                 <attribute name="invisible">1</attribute>
             </xpath>
             <xpath expr="//button[@special='cancel']" position="before">
-                <button name="button_close_mo" type="object" string="Finish Production" class="btn-primary"/>
+                <button name="button_close_mo" type="object" string="Record Production" class="btn-primary"/>
             </xpath>
         </field>
     </record>
