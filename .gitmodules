@@ -2,3 +2,7 @@
 	path = addons-odoo-apps
 	url = git@git.myidealis.be:odoo_apps/addons.git
 	branch = 13.0
+[submodule "addons-ic-common"]
+	path = addons-ic-common
+	url = git@git.myidealis.be:ic_common/addons.git
+	branch = 13.0
