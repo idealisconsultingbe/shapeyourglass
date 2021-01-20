@@ -15,6 +15,7 @@
         'mrp_workorder',
     ],
     'data': [
+        'wizard/create_fp_sale_order_line_views.xml',
         'security/ir.model.access.csv',
         'views/agc_product_category_views.xml',
         'views/agc_mrp_routing_views.xml',

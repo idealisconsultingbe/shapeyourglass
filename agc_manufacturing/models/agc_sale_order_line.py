@@ -12,8 +12,8 @@ class AGCSaleOrderLine(models.Model):
     button_configure_visible = fields.Boolean(string='Configure Finished Product Button Visibility', compute='_compute_button_configure_visible', help='Technical field used to compute finished product button visibility.')
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
-    max_producible_quantity = fields.Integer(string='Max Producible Qty', default=1, compute='calculate_max_producible_qty', help='This quantity is the quantity that are going to be produced if we have an efficiency of 100% at each step.')
-    configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, copy=False, help='Technical field that helps to know whether the Finished Product configuration is done.')
+    max_producible_quantity = fields.Integer(string='Max Producible Qty', compute='_compute_max_producible_qty', help='The quantity which is going to be produced if we have an efficiency of 100% for each step.')
+    configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, copy=False, help='Technical field that helps to know if the Finished Product configuration is done.')
     stock_move_ids = fields.One2many('stock.move', 'sale_order_line_id', string='Stock Moves', readonly=True)
 
     @api.depends('product_id.categ_id.product_type')
@@ -43,7 +43,7 @@ class AGCSaleOrderLine(models.Model):
     @api.depends('product_manufacture_step_ids.bom_id.product_qty', 'product_manufacture_step_ids.bom_efficiency',
                  'product_manufacture_step_ids.bom_id.bom_line_ids', 'product_manufacture_step_ids.product_id',
                  'product_manufacture_step_ids.sequence', 'finished_product_quantity', 'product_uom_qty', 'configuration_is_done')
-    def calculate_max_producible_qty(self):
+    def _compute_max_producible_qty(self):
         """ Compute the maximum producible quantity"""
         for line in self:
             line.max_producible_quantity = 0

@@ -7,15 +7,15 @@ from odoo.exceptions import UserError, ValidationError
 
 class AGCProductManufacturingStep(models.Model):
     _name = 'product.manufacturing.step'
-    _description = 'Each record describes a step of the manufacturing chain aiming to produced a finished product.'
+    _description = 'Each record describes a step of the manufacturing chain aiming to produce a finished product.'
     _order = 'sequence'
 
-    sale_line_id = fields.Many2one('sale.order.line', string='Sale Order Line', required=True, ondelete='cascade')
+    sale_line_id = fields.Many2one('sale.order.line', string='Sale Order Line', ondelete='cascade')
     configuration_is_done = fields.Boolean(related='sale_line_id.configuration_is_done', string='Finished Product Configuration is Done', help='Technical field that helps to know whether the Finished Product configuration is done.')
     sale_order_state = fields.Selection(related='sale_line_id.order_id.state', string='Sale Order Status')
     sequence = fields.Integer(string='Sequence', help="Used to order the 'Product Manufacturing Step' tree view", default=1)
     product_id = fields.Many2one('product.product', string='Product', required=True)
-    bom_id = fields.Many2one('mrp.bom', string='Bill of Material', domain="[('product_id', '=', product_id), ('active', '=', True)]")
+    bom_id = fields.Many2one('mrp.bom', string='Bill of Material')
     bom_type = fields.Selection(related='bom_id.type', string='BoM Type')
     initial_bom_efficiency = fields.Integer(string='Initial BoM  Yield (%)', compute='_get_initial_bom_yield')
     bom_efficiency = fields.Integer(string='BoM  Yield (%)', default=100, help='This parameter allows to adapt BOM efficiency. Its value must be lower or equal to 100 and higher than zero.\n'
@@ -67,7 +67,7 @@ class AGCProductManufacturingStep(models.Model):
             - Stop the process because we have reach the last. The whole manufacturing chain is configured
         """
         self.ensure_one()
-        # Before validating a manufacturing step we need to specified at least a BoM.
+        # Before validating a manufacturing step we need to specify at least a BoM.
         if self.bom_id and (self.routing_id or self.bom_type != 'normal'):
             bom_semi_finished_products = self.bom_id.bom_line_ids.filtered(lambda line: line.product_id.categ_id.product_type == 'semi_finished_product')
             if len(bom_semi_finished_products) > 1:
@@ -90,7 +90,7 @@ class AGCProductManufacturingStep(models.Model):
 
     def delete_product_manufacturing_step_action(self):
         """
-        Delete a manufacturing step en then unlock the previous step.
+        Delete a manufacturing step and unlock the previous step.
         """
         self.ensure_one()
         sale_line = self.sale_line_id
