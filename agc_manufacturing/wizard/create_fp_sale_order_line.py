@@ -25,27 +25,14 @@ class CreateFPSaleOrderLine(models.TransientModel):
     product_uom_qty = fields.Float(string='Quantity', digits='Product Unit of Measure', required=True, default=1.0)
     product_uom_id = fields.Many2one('uom.uom', string='Unit of Measure', required=True, domain="[('category_id', '=', product_uom_category_id)]")
     product_uom_category_id = fields.Many2one(related='product_id.uom_id.category_id')
-
-    product_manufacture_step_ids = fields.Many2many('product.manufacturing.step', 'wiz_manufacturing_step_rel', 'wiz_id', 'manuf_step_id', string='Finished Product Manufacturing Step')
-    # finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, required=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
-    # max_producible_quantity = fields.Integer(string='Max Producible Qty', compute='_compute_max_producible_qty', help='The quantity which is going to be produced if we have an efficiency of 100% for each step.')
+    finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1,
+                                               help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
+    product_manufacture_step_ids = fields.Many2many('create.fp.manufacturing.step', string='Finished Product Manufacturing Step')
+    product_manufacture_step_vals = {} # Necessary to keep in memory the values of each product_manufacture_step_ids
     configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, help='Technical field that helps to know if the Finished Product configuration is done.')
-
     allowed_category_ids = fields.Many2many('product.category', 'wiz_product_category_rel', 'wiz_id', 'category_id', default=_default_allowed_category_ids, string='Allowed Product Categories', help='Technical field used to filter finished products')
     updated_manufacturing_step = fields.Boolean(string='Update Manufacturing Step')
     deleted_manufacturing_step = fields.Boolean(string='Delete Manufacturing Step')
-
-    # @api.depends('product_manufacture_step_ids.bom_id.product_qty', 'product_manufacture_step_ids.bom_efficiency',
-    #              'product_manufacture_step_ids.bom_id.bom_line_ids', 'product_manufacture_step_ids.product_id',
-    #              'product_manufacture_step_ids.sequence', 'finished_product_quantity', 'product_uom_qty', 'configuration_is_done')
-    # def _compute_max_producible_qty(self):
-    #     """ Compute the maximum producible quantity"""
-    #     for wiz in self:
-    #         wiz.max_producible_quantity = 0
-    #         if wiz.configuration_is_done:
-    #             max_product_qty = wiz.get_max_product_qty()
-    #             if max_product_qty:
-    #                 wiz.max_producible_quantity = max_product_qty[1]['qty_to_produce']
 
     @api.onchange('product_id')
     def _onchange_product_id(self):
@@ -60,7 +47,7 @@ class CreateFPSaleOrderLine(models.TransientModel):
         vals = {}
 
         # create first manufacturing step
-        product_manufacture_step = self.env['product.manufacturing.step'].create({'product_id': self.product_id.id, 'sequence': 1})
+        product_manufacture_step = self.env['create.fp.manufacturing.step'].create({'product_id': self.product_id.id, 'sequence': 1})
         vals['product_manufacture_step_ids'] = [(6, 0, [product_manufacture_step.id])]
 
         if not self.product_uom_id or (self.product_id.uom_id.id != self.product_uom_id.id):
@@ -171,6 +158,10 @@ class CreateFPSaleOrderLine(models.TransientModel):
         # retrieve last manufacturing step
         sorted_manufacturing_steps = self.product_manufacture_step_ids.sorted(key=lambda x: x.sequence, reverse=True)
         last_manufacturing_step = sorted_manufacturing_steps[0] if len(sorted_manufacturing_steps) > 1 else sorted_manufacturing_steps
+        if last_manufacturing_step:
+            manufacture_step_val = last_manufacturing_step.copy_data()[0]
+            del manufacture_step_val['fp_sale_line_id']
+            self.product_manufacture_step_vals[last_manufacturing_step.sequence] = manufacture_step_val
 
         vals = {}
         # if there is no manufacturing steps
@@ -216,6 +207,8 @@ class CreateFPSaleOrderLine(models.TransientModel):
         penultimate_manufacturing_step = sorted_manufacturing_steps[1] if len(sorted_manufacturing_steps) >= 2 else False
 
         if last_manufacturing_step:
+            if last_manufacturing_step.sequence in self.product_manufacture_step_vals:
+                del self.product_manufacture_step_vals[last_manufacturing_step.sequence]
             self.update({'product_manufacture_step_ids': [(2, last_manufacturing_step.id, 0)]})
             # set penultimate manufacturing step state to updatable (Unlock it)
             if penultimate_manufacturing_step:
@@ -236,53 +229,12 @@ class CreateFPSaleOrderLine(models.TransientModel):
                 'product_id': self.product_id.id,
                 'product_uom_qty': self.product_uom_qty,
                 'product_uom': self.product_uom_id.id,
+                'finished_product_quantity': self.finished_product_quantity,
                 'configuration_is_done': self.configuration_is_done,
-                # 'finished_product_quantity': self.finished_product_quantity,
-                'product_manufacture_step_ids': [(0, 0, self.product_manufacture_step_ids.ids)]
+                'product_manufacture_step_ids': [(0, 0, self.product_manufacture_step_vals[step_sequence]) for step_sequence in self.product_manufacture_step_vals]
             }
-            line = self.env['sale.order.line'].create(vals)
-            # self.product_manufacture_step_ids.write({'sale_line_id': line.id})
-
-    # def get_max_product_qty(self):
-    #     """Compute the min qty needed and the maximum producible quantity for each MO"""
-    #     self.ensure_one()
-    #     mo_qty = dict()
-    #     for step in self.product_manufacture_step_ids:
-    #         if step.sequence == 1:
-    #             qty_needed = self.product_uom_qty
-    #             factor = ceil(qty_needed / self.finished_product_quantity)
-    #             factor = factor / (step.bom_id.product_qty or 1.0)
-    #             factor = ceil(factor * (100 / step.bom_efficiency))
-    #             qty_to_produce = factor * step.bom_id.product_qty * self.finished_product_quantity
-    #         else:
-    #             qty_needed = mo_qty[step.sequence - 1]['raw_mat'][step.product_id.id]['qty_needed']
-    #             factor = qty_needed / (step.bom_id.product_qty or 1.0)
-    #             factor = ceil(factor * (100 / step.bom_efficiency))
-    #             qty_to_produce = factor * step.bom_id.product_qty
-    #
-    #         mo_qty.update({
-    #             step.sequence: {
-    #                 'qty_needed': qty_needed,
-    #                 'qty_to_produce': qty_to_produce,
-    #                 'product_id': step.product_id.id,
-    #                 'factor': factor,
-    #                 'raw_mat': dict()}})
-    #
-    #         for raw_line in step.bom_id.bom_line_ids:
-    #             mo_qty[step.sequence]['raw_mat'].update({raw_line.product_id.id: {
-    #                 'qty_needed': raw_line.product_qty * factor,
-    #                 'bom_qty': raw_line.product_qty}})
-    #     if mo_qty:
-    #         i = max(mo_qty.keys()) - 1
-    #         while i > 0:
-    #             max_raw_mat_produced = mo_qty[i + 1]['qty_to_produce']
-    #             raw_mat_product_id = mo_qty[i + 1]['product_id']
-    #             raw_mat_bom_qty = mo_qty[i]['raw_mat'][raw_mat_product_id]['bom_qty']
-    #             factor = ceil(max_raw_mat_produced / raw_mat_bom_qty)
-    #             mo_qty[i]['qty_to_produce'] = (mo_qty[i]['qty_to_produce'] / mo_qty[i]['factor']) * factor
-    #             mo_qty[i]['max_factor'] = factor
-    #             i -= 1
-    #     return mo_qty
+            line = self.env['sale.order.line'].with_context(pf_configure=True).create(vals)
+            line.calculate_product_cost_action()
 
     def _get_display_price(self, product):
         """

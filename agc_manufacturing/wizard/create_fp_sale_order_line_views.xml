@@ -53,15 +53,15 @@
                         </group>
                     </group>
                     <separator string="Manufacturing Steps"/>
-<!--                    <group col="4">-->
-<!--                        <field name="finished_product_quantity"/>-->
-<!--                        <field name="max_producible_quantity" attrs="{'invisible': [('configuration_is_done', '!=', True)]}"/>-->
-<!--                    </group>-->
+                    <group>
+                        <group>
+                            <field name="finished_product_quantity"/>
+                        </group>
+                    </group>
                     <field name="product_manufacture_step_ids" options="{'no_create': True}">
                         <tree editable="bottom" create="false" delete="false">
                             <field name="sequence" invisible="1"/>
                             <field name="state" invisible="1"/>
-                            <field name="sale_order_state" invisible="1"/>
                             <field name="bom_type" invisible="1"/>
                             <field name="product_id"/>
                             <field name="bom_id" string="BoM" required="1" domain="[('product_id', '=', product_id), ('active', '=', True)]" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
@@ -69,7 +69,6 @@
                             <field name="bom_efficiency" string="Yield (%)" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
                             <field name="routing_id" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
                             <field name="routing_efficiency_id" string="Complexity" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
-                            <field name="price_unit" readonly="1"/>
                         </tree>
                     </field>
                     <label class="button-lookalike" for="updated_manufacturing_step" string="Update" attrs="{'invisible': [('configuration_is_done', '=', True)]}"/>
