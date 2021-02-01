@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="create_fp_sale_order_line_view_form" model="ir.ui.view">
+        <field name="name">create.fp.sale.order.line.view.form</field>
+        <field name="model">create.fp.sale.order.line</field>
+        <field name="arch" type="xml">
+            <form string="Add Finished Product">
+                <style>
+                    .button-lookalike {
+                        display: inline-block;
+                        text-align: center;
+                        vertical-align: middle;
+                        user-select: none;
+                        border: 1px solid #00A09D;
+                        padding: 0.375rem 0.75rem;
+                        font-size: 1.08333333rem;
+                        line-height: 1.5;
+                        border-radius: 0;
+                        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                        color: #FFFFFF;
+                        background-color: #00A09D;
+                        cursor: pointer;
+                        text-transform: uppercase;
+                    }
+                    .button-lookalike:hover {
+                        background-color: #007a77;
+                    }
+                </style>
+                <sheet>
+                    <group>
+                        <field name="order_id" invisible="1"/>
+                        <field name="company_id" invisible="1"/>
+                        <field name="allowed_category_ids" invisible="1"/>
+                        <field name="product_uom_category_id" invisible="1"/>
+                        <field name="configuration_is_done" invisible="1"/>
+
+                        <group string="Product Information">
+                            <field name="sequence"/>
+                            <field name="product_id" options="{'no_open': True, 'no_create': True}" domain="[('categ_id', 'in', allowed_category_ids), ('sale_ok', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]"/>
+                            <field name="name"/>
+                        </group>
+
+                        <group string="Sale Information">
+                            <label for="product_uom_qty" string="Quantity"/>
+                            <div class="o_row">
+                                <field name="product_uom_qty"/>
+                                <field name="product_uom_id" options="{'no_open':True,'no_create':True}" groups="uom.group_uom"/>
+                            </div>
+                            <field name="price_unit"/>
+                            <field name="tax_ids" widget="many2many_tags" options="{'no_open': True, 'no_create': True}" domain="[('type_tax_use','=','sale'),('company_id','=',company_id)]"/>
+                            <field name="discount" string="Disc.%" groups="product.group_discount_per_so_line"/>
+                        </group>
+                    </group>
+                    <separator string="Manufacturing Steps"/>
+
+                    <group>
+                        <group>
+                            <field name="finished_product_quantity"/>
+                        </group>
+                    </group>
+                    <field name="product_manufacture_step_ids" options="{'no_create': True}">
+                        <tree editable="bottom" create="false" delete="false">
+                            <field name="sequence" invisible="1"/>
+                            <field name="state" invisible="1"/>
+                            <field name="bom_type" invisible="1"/>
+                            <field name="product_id"/>
+                            <field name="bom_id" string="BoM" required="1" domain="[('product_id', '=', product_id), ('active', '=', True)]" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
+                            <field name="initial_bom_efficiency" string="Default Yield (%)"/>
+                            <field name="bom_efficiency" string="Yield (%)" required="1" attrs="{'readonly': [('state', 'in', ('locked', 'updated'))]}"/>
+                            <field name="routing_id" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
+                            <field name="routing_efficiency_id" string="Complexity" attrs="{'readonly': ['|', ('state', 'in', ('locked', 'updated')), ('bom_type', '!=', 'normal')], 'required': [('bom_type', '=', 'normal')]}"/>
+                        </tree>
+                    </field>
+                    <label class="button-lookalike" for="updated_manufacturing_step" string="Update" attrs="{'invisible': [('configuration_is_done', '=', True)]}"/>
+                    <field name="updated_manufacturing_step" invisible="1"/>
+                    <label class="button-lookalike" for="deleted_manufacturing_step" string="Remove" attrs="{'invisible': [('product_manufacture_step_ids', '=', False)]}"/>
+                    <field name="deleted_manufacturing_step" invisible="1"/>
+                </sheet>
+                <footer>
+                    <button string="Save" name="button_add_line" type="object" class="btn-primary" attrs="{'invisible': [('configuration_is_done', '=', False)]}"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="add_fp_line_action" model="ir.actions.act_window">
+        <field name="name">Add Finished Product</field>
+        <field name="res_model">create.fp.sale.order.line</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="create_fp_sale_order_line_view_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

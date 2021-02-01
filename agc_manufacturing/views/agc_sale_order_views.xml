@@ -11,7 +11,16 @@
                     <field name="button_configure_visible" invisible="1"/>
                     <button string="FP Configuration" type="object" name="open_fp_configuration_view" class="btn-primary" attrs="{'invisible': [('button_configure_visible', '!=', True)]}"/>
                 </xpath>
+                <xpath expr="//header" position="inside">
+                    <button name="%(agc_manufacturing.add_fp_line_action)d"
+                        string="Add a Finished Product"
+                        type="action"
+                        context="{'default_order_id': id, 'default_company_id': company_id}"
+                        attrs="{'invisible': [('state', '!=', 'sale')]}"
+                    />
+                </xpath>
             </data>
         </field>
     </record>
+
 </odoo>
