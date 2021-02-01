@@ -53,6 +53,7 @@
                         </group>
                     </group>
                     <separator string="Manufacturing Steps"/>
+
                     <group>
                         <group>
                             <field name="finished_product_quantity"/>

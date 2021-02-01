@@ -30,6 +30,8 @@ class CreateFPSaleOrderLine(models.TransientModel):
     product_manufacture_step_ids = fields.Many2many('create.fp.manufacturing.step', string='Finished Product Manufacturing Step')
     product_manufacture_step_vals = {} # Necessary to keep in memory the values of each product_manufacture_step_ids
     configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, help='Technical field that helps to know if the Finished Product configuration is done.')
+    product_manufacture_step_ids = fields.Many2many('product.manufacturing.step', 'wiz_manufacturing_step_rel', 'wiz_id', 'manuf_step_id', string='Finished Product Manufacturing Step')
+    configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, help='Technical field that helps to know if the Finished Product configuration is done.')
     allowed_category_ids = fields.Many2many('product.category', 'wiz_product_category_rel', 'wiz_id', 'category_id', default=_default_allowed_category_ids, string='Allowed Product Categories', help='Technical field used to filter finished products')
     updated_manufacturing_step = fields.Boolean(string='Update Manufacturing Step')
     deleted_manufacturing_step = fields.Boolean(string='Delete Manufacturing Step')
