@@ -9,12 +9,6 @@ from math import ceil
 class AGCSaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    def _default_millimeters_uom_id(self):
-        uom = self.env.ref('agc_manufacturing.product_uom_millimeter', raise_if_not_found=False)
-        if not uom:
-            uom = self.env['uom.uom'].search([('category_id', '=', self.env.ref('uom.uom_categ_length').id), ('factor', '=', '1000')], limit=1)
-        return uom
-
     button_configure_visible = fields.Boolean(string='Configure Finished Product Button Visibility', compute='_compute_button_configure_visible', help='Technical field used to compute finished product button visibility.')
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
