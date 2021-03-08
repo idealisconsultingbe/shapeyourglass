@@ -13,6 +13,39 @@ class AgcProductionLot(models.Model):
     unit_cost = fields.Monetary(currency_field='currency_id', string='Unit Cost', default=0.0)
     value_cost = fields.Monetary(currency_field='currency_id', string='Value Cost', compute='_compute_value_cost', store=True, readonly=True)
 
+    length = fields.Float(string='Product Length (mm)', compute='_compute_product_size', store=True)
+    width = fields.Float(string='Product Width (mm)', compute='_compute_product_size', store=True)
+
+    @api.depends('stock_move_line_ids.move_id.sale_order_line_id',
+                 'stock_move_line_ids.move_id.sale_order_line_id.width',
+                 'stock_move_line_ids.move_id.sale_order_line_id.length',
+                 'stock_move_line_ids.move_id.sale_order_line_id.mothersheet_width',
+                 'stock_move_line_ids.move_id.sale_order_line_id.mothersheet_length')
+    def _compute_product_size(self):
+        """
+        Retrieve product size from sale order line
+        If lot product is a mothersheet (intermediate product in manufacturing steps), then retrieve mothersheet size
+        If lot product is a final product, then retrieve product size
+        """
+        for lot in self:
+            length = 0.0
+            width = 0.0
+            if lot.stock_move_line_ids:
+                moves = lot.stock_move_line_ids.mapped('move_id')
+                order_lines = moves.mapped('sale_order_line_id') if moves else False
+                if order_lines:
+                    order_lines = order_lines.filtered(lambda line: line.product_manufacture_step_ids)
+                    for candidate_line in order_lines:
+                        if candidate_line.product_id == lot.product_id:
+                            length = candidate_line.length
+                            width = candidate_line.width
+                            break
+                        elif lot.product_id in candidate_line.product_manufacture_step_ids.mapped('product_id'):
+                            length = candidate_line.mothersheet_length
+                            width = candidate_line.mothersheet_width
+                            break
+            lot.write({'length': length, 'width': width})
+
     @api.depends('stock_move_line_ids.produce_line_ids', 'stock_move_line_ids.consume_line_ids')
     def _compute_ref(self):
         """

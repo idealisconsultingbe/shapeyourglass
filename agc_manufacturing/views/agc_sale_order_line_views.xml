@@ -12,7 +12,12 @@
                     <group name="main">
                         <group name="sub_main_data">
                             <field name="finished_product_quantity"/>
+                            <field name="mothersheet_length" string="MS Length (mm)"/>
+                            <field name="mothersheet_width" string="MS width (mm)"/>
+                            <field name="length" string="Product Length (mm)"/>
+                            <field name="width" string="Product Width (mm)"/>
                             <field name="company_id" invisible="1"/>
+                            <field name="state" invisible="1"/>
                         </group>
                         <group name="cost">
                             <field name="purchase_price" readonly="1" attrs="{'invisible': [('configuration_is_done', '!=', True)]}" string="Unit Cost"/>
@@ -62,6 +67,7 @@
                 </sheet>
                 <footer>
                     <button string="Save" class="btn-primary" special="save"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>
@@ -80,7 +86,12 @@
                     <field name="configuration_is_done" invisible="1"/>
                     <group name="main">
                         <group name="sub_main_data">
+                            <field name="state" invisible="1"/>
                             <field name="finished_product_quantity" readonly="1"/>
+                            <field name="mothersheet_length" string="MS Length (mm)"/>
+                            <field name="mothersheet_width" string="MS width (mm)"/>
+                            <field name="length" string="Product Length (mm)"/>
+                            <field name="width" string="Product Width (mm)"/>
                         </group>
                         <group name="cost">
                             <field name="purchase_price" string="Unit Cost" readonly="1"/>
@@ -125,6 +136,7 @@
                     </notebook>
                 </sheet>
                 <footer>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>

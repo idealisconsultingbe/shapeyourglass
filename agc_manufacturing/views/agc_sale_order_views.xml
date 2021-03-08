@@ -23,4 +23,22 @@
         </field>
     </record>
 
+    <record id="view_sales_order_filter" model="ir.ui.view">
+        <field name="name">view.sales.order.filter.inherited.manufacturing.steps</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='order_line']" position="after">
+                    <field name="order_line" string="Mothersheet Length" filter_domain="[('order_line.mothersheet_length', '=', self)]"/>
+                    <field name="order_line" string="Mothersheet Width" filter_domain="[('order_line.mothersheet_width', '=', self)]"/>
+                    <field name="order_line" string="Product Length" filter_domain="[('order_line.length', '=', self)]"/>
+                    <field name="order_line" string="Product Width" filter_domain="[('order_line.width', '=', self)]"/>
+                    <field name="order_line" string="Operations" filter_domain="[('order_line.route_ids', 'ilike', self)]"/>
+                    <field name="order_line" string="Bill of Materials" filter_domain="[('order_line.bom_ids.code', 'ilike', self)]"/>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
 </odoo>

@@ -9,12 +9,63 @@ from math import ceil
 class AGCSaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
+    def _default_millimeters_uom_id(self):
+        uom = self.env.ref('agc_manufacturing.product_uom_millimeter', raise_if_not_found=False)
+        if not uom:
+            uom = self.env['uom.uom'].search([('category_id', '=', self.env.ref('uom.uom_categ_length').id), ('factor', '=', '1000')], limit=1)
+        return uom
+
     button_configure_visible = fields.Boolean(string='Configure Finished Product Button Visibility', compute='_compute_button_configure_visible', help='Technical field used to compute finished product button visibility.')
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
     max_producible_quantity = fields.Integer(string='Max Producible Qty', compute='_compute_max_producible_qty', help='The quantity which is going to be produced if we have an efficiency of 100% for each step.')
     configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, copy=False, help='Technical field that helps to know if the Finished Product configuration is done.')
     stock_move_ids = fields.One2many('stock.move', 'sale_order_line_id', string='Stock Moves', readonly=True)
+
+    mothersheet_length = fields.Float(string='Mothersheet Length (mm)', compute='_compute_mothersheet_size', store=True)
+    mothersheet_width = fields.Float(string='Mothersheet Width (mm)', compute='_compute_mothersheet_size', store=True)
+    length = fields.Float(string='Final Product Length (mm)', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, default=0.0)
+    width = fields.Float(string='Final Product Width (mm)', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, default=0.0)
+    raw_product_ids = fields.Many2many('product.product', string='Raw Products', compute='_compute_raw_product_ids', store=True)
+    route_ids = fields.Many2many('mrp.routing', string='Routings', compute='_compute_manufacturing_steps_operation', store=True)
+    bom_ids = fields.Many2many('mrp.bom', string='Bill of Materials', compute='_compute_manufacturing_steps_operation', store=True)
+
+    @api.depends('product_manufacture_step_ids', 'product_manufacture_step_ids.bom_id', 'product_manufacture_step_ids.routing_id')
+    def _compute_manufacturing_steps_operation(self):
+        """ Retrieve all manufacturing steps operations (BoMs and routes used) """
+        for line in self:
+            line.route_ids = line.product_manufacture_step_ids.mapped('routing_id')
+            line.bom_ids = line.product_manufacture_step_ids.mapped('bom_id')
+
+    @api.depends('product_manufacture_step_ids', 'product_manufacture_step_ids.bom_id', 'product_manufacture_step_ids.bom_id.bom_line_ids')
+    def _compute_raw_product_ids(self):
+        """ Retrieve BoM components from first step (step with the greatest sequence) """
+        for line in self:
+            sorted_steps = line.product_manufacture_step_ids.filtered(lambda step: step.bom_id and step.bom_id.bom_line_ids).sorted(key=lambda step: step.sequence)
+            if sorted_steps:
+                if len(sorted_steps) > 1:
+                    line.raw_product_ids = sorted_steps[-1].bom_id.bom_line_ids.mapped('product_id')
+                else:
+                    line.raw_product_ids = sorted_steps.bom_id.bom_line_ids.mapped('product_id')
+            else:
+                line.raw_product_ids = False
+
+    @api.depends('product_manufacture_step_ids',
+                 'product_manufacture_step_ids.bom_id',
+                 'product_manufacture_step_ids.bom_id.mothersheet_length',
+                 'product_manufacture_step_ids.bom_id.mothersheet_width')
+    def _compute_mothersheet_size(self):
+        """ Retrieve mothersheet size from first step (step with the greatest sequence) that produces mothersheet """
+        for line in self:
+            length = 0.0
+            width = 0.0
+            sorted_steps = line.product_manufacture_step_ids.sorted(key=lambda step: step.sequence, reverse=True)
+            for step in sorted_steps:
+                if step.bom_id and step.bom_id.does_produce_mothersheet:
+                    length = step.bom_id.mothersheet_length
+                    width = step.bom_id.mothersheet_width
+                    break
+            line.write({'mothersheet_length': length, 'mothersheet_width': width})
 
     @api.depends('product_id.categ_id.product_type')
     def _compute_button_configure_visible(self):
