@@ -9,6 +9,8 @@ from math import ceil
 class AGCSaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
+    no_config_needed = fields.Boolean(string='No Config')
+    config_flag_readonly = fields.Boolean(string='Configuration Flag Readonly', compute='_compute_config_flag_readonly', help='Technical field used to compute configuration flag read-only mode.')
     button_configure_visible = fields.Boolean(string='Configure Finished Product Button Visibility', compute='_compute_button_configure_visible', help='Technical field used to compute finished product button visibility.')
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1, help='Must be expressed in the unit of measure of the BoM selected for producing the Finished Product (the UoM of the BoM selected at the first line.)')
@@ -16,15 +18,22 @@ class AGCSaleOrderLine(models.Model):
     configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, copy=False, help='Technical field that helps to know if the Finished Product configuration is done.')
     stock_move_ids = fields.One2many('stock.move', 'sale_order_line_id', string='Stock Moves', readonly=True)
 
-    @api.depends('product_id.categ_id.product_type')
+    @api.depends('route_id', 'stock_move_ids.production_id')
+    def _compute_config_flag_readonly(self):
+        """
+        Compute readonly mode of configuration flag. This flag should be readonly if product is in production
+        """
+        for line in self:
+            line.config_flag_readonly = True if line.stock_move_ids.mapped('production_id') else False
+
+    @api.depends('product_id.categ_id.product_type', 'no_config_needed')
     def _compute_button_configure_visible(self):
         """
-        Check whether the product selected is a finished product.
-        If it is it should be configured.
+        Compute visibility of configuration button. If line product is a finished product then it should be configured
         """
         for line in self:
             if line.product_id.categ_id.product_type == 'finished_product':
-                line.button_configure_visible = True
+                line.button_configure_visible = False if line.no_config_needed else True
             else:
                 line.button_configure_visible = False
 
@@ -180,3 +189,10 @@ class AGCSaleOrderLine(models.Model):
                     products_price_list[step_line.product_id.id] = step_line.price_unit
                 self.purchase_price = sorted_steps[-1].price_unit / (self.finished_product_quantity or 1)
             return self.open_fp_configuration_view()
+
+    def write(self, values):
+        """ Unlink manufacturing steps if configuration flag is true """
+        res = super(AGCSaleOrderLine, self).write(values)
+        if values.get('no_config_needed', False):
+            self.product_manufacture_step_ids.unlink()
+        return res
