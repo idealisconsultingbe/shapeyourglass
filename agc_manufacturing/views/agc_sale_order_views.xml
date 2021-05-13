@@ -29,7 +29,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='order_line']/tree/field[@name='route_id']" position="after">
                 <field name="config_flag_readonly" invisible="1"/>
-                <field name="no_config_needed" attrs="{'readonly': [('config_flag_readonly', '=', True)]}" groups="stock.group_adv_location" optional="hide"/>
+                <field name="no_config_needed" attrs="{'readonly': [('config_flag_readonly', '=', True)]}" groups="stock.group_adv_location"/>
             </xpath>
         </field>
     </record>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock_location_route_form_view" model="ir.ui.view">
+        <field name="name">stock.location.route.view.form.inherited.no.config</field>
+        <field name="model">stock.location.route</field>
+        <field name="inherit_id" ref="sale_stock.stock_location_route_view_form_inherit_sale_stock"/>
+        <field name="arch" type="xml">
+            <field name="sale_selectable" position="after">
+                <field name="no_config_needed" attrs="{'invisible': [('sale_selectable', '=', False)]}"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="stock_location_route_view_search" model="ir.ui.view">
+        <field name="name">stock.location.route.view.search.inherited.no.config</field>
+        <field name="model">stock.location.route</field>
+        <field name="inherit_id" ref="stock.stock_location_route_view_search"/>
+        <field name="arch" type="xml">
+            <filter name="inactive" position="after">
+                <separator />
+                <filter string="No Manufacturing Steps Config" name="no_config" domain="[('no_config_needed','=',True)]"/>
+            </filter>
+        </field>
+    </record>
+
+</odoo>

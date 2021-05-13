@@ -9,7 +9,7 @@ from math import ceil
 class AGCSaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    no_config_needed = fields.Boolean(string='No Config')
+    no_config_needed = fields.Boolean(string='No Config', help='Allow to confirm this line without manufacturing steps. By default, this information comes from location route and cannot be changed if order is in production.')
     config_flag_readonly = fields.Boolean(string='Configuration Flag Readonly', compute='_compute_config_flag_readonly', help='Technical field used to compute configuration flag read-only mode.')
     button_configure_visible = fields.Boolean(string='Configure Finished Product Button Visibility', compute='_compute_button_configure_visible', help='Technical field used to compute finished product button visibility.')
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'sale_line_id', string='Finished Product Manufacturing Step')
@@ -42,6 +42,11 @@ class AGCSaleOrderLine(models.Model):
         for line in self:
             if line.purchase_price > 0.0:
                 self.calculate_product_cost_action()
+
+    @api.onchange('route_id')
+    def _onchange_route_id(self):
+        if not self.stock_move_ids.mapped('production_id') and self.route_id:
+            self.no_config_needed = self.route_id.no_config_needed
 
     def action_cost_analysis(self):
         """ Open report view of all done MO linked to sale order line """
