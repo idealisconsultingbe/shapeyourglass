@@ -12,13 +12,17 @@ class AGCSaleOrder(models.Model):
         """
         Overridden Method
         We add in the context the pf_configure parameter in order to alter the behaviour of the standard.
-        We block the confirmation of the SO if some finished product are not totally configured.
+        We block the confirmation of the SO if some finished productS are not totally configured.
         """
-        fp_line = self.order_line.filtered(lambda line: line.product_id.categ_id.product_type == 'finished_product')
+        fp_line = self.order_line.filtered(lambda line: line.product_id.categ_id.product_type == 'finished_product' and not line.no_config_needed)
         if fp_line:
             line_configuration_is_not_done = fp_line.filtered(lambda line: not line.configuration_is_done)
             if line_configuration_is_not_done:
-                error_msg = _('Finished products {} are not configured.').format(line_configuration_is_not_done.mapped(lambda line: line.product_id.name_get()))
+                fp_missing_configuration = line_configuration_is_not_done.mapped('product_id')
+                if len(fp_missing_configuration) > 1:
+                    error_msg = _('Finished products {} are not configured.').format(', '.join(fp_missing_configuration.mapped(lambda product: '{}(ID:{})'.format(product.name, product.id))))
+                else:
+                    error_msg = _('Finished product {} is not configured.').format('{}(ID:{})'.format(fp_missing_configuration.name, fp_missing_configuration.id))
                 raise ValidationError(error_msg)
             self = self.with_context(pf_configure=True)
         return super(AGCSaleOrder, self).action_confirm()
