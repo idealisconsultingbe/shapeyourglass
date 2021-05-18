@@ -12,6 +12,8 @@
                     <group name="main">
                         <group name="sub_main_data">
                             <field name="finished_product_quantity"/>
+                            <field name="width"/>
+                            <field name="length"/>
                             <field name="company_id" invisible="1"/>
                         </group>
                         <group name="cost">
@@ -81,6 +83,8 @@
                     <group name="main">
                         <group name="sub_main_data">
                             <field name="finished_product_quantity" readonly="1"/>
+                            <field name="width" readonly="1"/>
+                            <field name="length" readonly="1"/>
                         </group>
                         <group name="cost">
                             <field name="purchase_price" string="Unit Cost" readonly="1"/>

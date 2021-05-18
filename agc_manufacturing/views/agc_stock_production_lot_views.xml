@@ -10,6 +10,46 @@
                 <field name="unit_cost" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                 <field name="value_cost" widget="monetary" options="{'currency_field': 'currency_id'}"/>
             </xpath>
+
+            <group name="main_group" position="inside">
+                <group>
+                    <field name="width"/>
+                    <field name="length"/>
+                    <field name="thickness"/>
+                    <field name="routing_ids" widget="many2many_tags"/>
+                    <field name="bom_ids" widget="many2many_tags"/>
+                </group>
+            </group>
+        </field>
+    </record>
+
+    <record id="view_production_lot_tree" model="ir.ui.view">
+        <field name="name">stock.production.lot.view.tree.inherited.dimension</field>
+        <field name="model">stock.production.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_tree"/>
+        <field name="arch" type="xml">
+            <field name="create_date" position="after">
+                <field name="width" optional="show"/>
+                <field name="length" optional="show"/>
+                <field name="thickness" optional="show"/>
+                <field name="routing_ids" optional="hide" widget="many2many_tags"/>
+                <field name="bom_ids" optional="hide" widget="many2many_tags"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="search_product_lot_filter" model="ir.ui.view">
+        <field name="name">stock.production.lot.view.search.inherited.dimension</field>
+        <field name="model">stock.production.lot</field>
+        <field name="inherit_id" ref="stock.search_product_lot_filter"/>
+        <field name="arch" type="xml">
+            <field name="product_id" position="after">
+                <field name="length"/>
+                <field name="width"/>
+                <field name="thickness"/>
+                <field name="routing_ids" string="Routes" filter_domain="[('routing_ids.name', 'ilike', self)]"/>
+                <field name="bom_ids" string="Bills of Material" filter_domain="[('bom_ids.code', 'ilike', self)]"/>
+            </field>
         </field>
     </record>
 
