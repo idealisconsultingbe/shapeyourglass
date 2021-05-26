@@ -16,6 +16,8 @@ class AGCSaleOrderLine(models.Model):
     max_producible_quantity = fields.Integer(string='Max Producible Qty', compute='_compute_max_producible_qty', help='The quantity which is going to be produced if we have an efficiency of 100% for each step.')
     configuration_is_done = fields.Boolean(string='Finished Product Configuration is Done', default=False, copy=False, help='Technical field that helps to know if the Finished Product configuration is done.')
     stock_move_ids = fields.One2many('stock.move', 'sale_order_line_id', string='Stock Moves', readonly=True)
+    width = fields.Float(string='Width(mm)', digits='Product Unit of Measure')
+    length = fields.Float(string='Length(mm)', digits='Product Unit of Measure')
 
     @api.depends('product_id.categ_id.product_type', 'no_config_needed')
     def _compute_button_configure_visible(self):

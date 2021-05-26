@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="product_attribute_view_form" model="ir.ui.view">
+        <field name="name">product.attribute.view.form.inherited.dimension</field>
+        <field name="model">product.attribute</field>
+        <field name="inherit_id" ref="product.product_attribute_view_form"/>
+        <field name="arch" type="xml">
+            <group name="main_fields" position="inside">
+                <field name="is_a_dimension"/>
+                <field name="dimension_type" class="oe_inline" attrs="{'required': [('is_a_dimension', '=', True)], 'invisible': [('is_a_dimension', '=', False)]}"/>
+            </group>
+        </field>
+    </record>
+
+</odoo>

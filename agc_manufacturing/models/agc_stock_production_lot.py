@@ -12,6 +12,11 @@ class AgcProductionLot(models.Model):
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
     unit_cost = fields.Monetary(currency_field='currency_id', string='Unit Cost', default=0.0)
     value_cost = fields.Monetary(currency_field='currency_id', string='Value Cost', compute='_compute_value_cost', store=True, readonly=True)
+    width = fields.Float(string='Width(mm)', digits='Product Unit of Measure')
+    length = fields.Float(string='Length(mm)', digits='Product Unit of Measure')
+    thickness = fields.Float(string='Thickness(mm)', digits='Product Unit of Measure')
+    routing_ids = fields.Many2many('mrp.routing', 'production_lot_routing_rel', 'lot_id', 'routing_id', string='Routes')
+    bom_ids = fields.Many2many('mrp.bom', 'production_lot_bom_rel', 'lot_id', 'bom_id', string='Bills of Material')
 
     @api.depends('stock_move_line_ids.produce_line_ids', 'stock_move_line_ids.consume_line_ids')
     def _compute_ref(self):

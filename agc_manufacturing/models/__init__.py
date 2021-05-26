@@ -18,3 +18,5 @@ from . import agc_stock_picking
 from . import agc_mrp_workorder
 from . import agc_quality_point
 from . import agc_stock_location_route
+from . import agc_product_attribute
+from . import agc_stock_move_line

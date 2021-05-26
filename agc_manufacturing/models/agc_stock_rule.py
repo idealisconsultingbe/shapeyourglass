@@ -55,7 +55,7 @@ class AGCStockRule(models.Model):
                 so_line_mo_qty = self.env.context.get('mo_qty', False)
                 qty_needed = so_line_mo_qty[so_line.id][step_line.sequence]['qty_needed'] if so_line_mo_qty and step_line else 0
                 if step_line.sequence == 1:
-                    res['product_qty'] = so_line.max_producible_quantity
+                    res.update({'product_qty': so_line.max_producible_quantity, 'width': so_line.width, 'length': so_line.length})
                 if 'name' in res:
                     del res['name']
                 res.update({
