@@ -9,9 +9,9 @@ from math import ceil
 class AGCProduction(models.Model):
     _inherit = 'mrp.production'
 
-    width = fields.Float(string='Width(mm)', digits='Product Unit of Measure')
-    length = fields.Float(string='Length(mm)', digits='Product Unit of Measure')
-    qty_needed = fields.Float(string='Min Quantity To Produce', default=0.0, digits='Product Unit of Measure', readonly=True, states={'draft': [('readonly', False)]}, help="Minimum quantity to produce in order to reach the quantity ordered by the customer.")
+    width = fields.Float(string='Width(mm)', digits='Manufacturing Precision')
+    length = fields.Float(string='Length(mm)', digits='Manufacturing Precision')
+    qty_needed = fields.Float(string='Min Quantity To Produce', default=0.0, digits='Manufacturing Precision', readonly=True, states={'draft': [('readonly', False)]}, help="Minimum quantity to produce in order to reach the quantity ordered by the customer.")
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', compute='_compute_sale_order_id', store=True)
     product_manufacture_step_ids = fields.One2many('product.manufacturing.step', 'production_id', string='Finished Product Manufacturing Step')
     subcontract_move_dest_id = fields.Many2one('stock.move', string='Subcontract Destination', help='Technical field used to find easily from which move comes the subcontracted demand.')

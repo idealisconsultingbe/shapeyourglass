@@ -22,7 +22,7 @@ class CreateFPSaleOrderLine(models.TransientModel):
     tax_ids = fields.Many2many('account.tax', string='Taxes', domain=['|', ('active', '=', False), ('active', '=', True)])
     discount = fields.Float(string='Discount (%)', digits='Discount', default=0.0)
     product_id = fields.Many2one('product.product', string='Product', change_default=True, required=True, check_company=True)  # Unrequired company
-    product_uom_qty = fields.Float(string='Quantity', digits='Product Unit of Measure', required=True, default=1.0)
+    product_uom_qty = fields.Float(string='Quantity', digits='Manufacturing Precision', required=True, default=1.0)
     product_uom_id = fields.Many2one('uom.uom', string='Unit of Measure', required=True, domain="[('category_id', '=', product_uom_category_id)]")
     product_uom_category_id = fields.Many2one(related='product_id.uom_id.category_id')
     finished_product_quantity = fields.Integer(string='Finished Products / Mothersheet', default=1,

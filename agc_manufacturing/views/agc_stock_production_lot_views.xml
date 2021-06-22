@@ -48,7 +48,7 @@
                 <field name="width"/>
                 <field name="thickness"/>
                 <field name="routing_ids" string="Routes" filter_domain="[('routing_ids.name', 'ilike', self)]"/>
-                <field name="bom_ids" string="Bills of Material" filter_domain="[('bom_ids.code', 'ilike', self)]"/>
+                <field name="bom_ids" string="Bills of Material" filter_domain="['|', '|', ('bom_ids.code', 'ilike', self), ('bom_ids.product_id.name', 'ilike', self), ('bom_ids.product_id.default_code', 'ilike', self)]"/>
             </field>
         </field>
     </record>
